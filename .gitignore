@@ -1,0 +1,95 @@
+# Python
+
+**pycache**/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Build
+
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+
+# Virtual Environment
+
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python tools
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment / secrets
+
+.env
+.env.*
+!.env.example
+
+# Certificates / keys
+
+*.pem
+*.key
+*.crt
+
+# Logs
+
+*.log
+logs/
+
+# Runtime temporary
+
+tmp/
+temp/
+*.tmp
+
+# Generated output
+
+output/*
+!output/.gitkeep
+
+# PCAP
+
+data/pcap/*
+!data/pcap/.gitkeep
+
+# Generated datasets
+
+data/generated/
+data/cache/
+
+# AI temporary files
+
+AI/handoffs/draft_*
+AI/tmp/
+
+# Backup
+
+*.bak
+*.backup
+*~
