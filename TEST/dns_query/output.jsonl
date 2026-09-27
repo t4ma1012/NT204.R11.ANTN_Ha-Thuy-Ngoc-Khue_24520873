@@ -1,0 +1,1 @@
+{"protocol": "DNS", "transport": {"src_port": 12345, "dst_port": 53, "length": 37, "payload_length": 0, "payload": ""}, "application": {"type": "query", "query": {"name": "example.com.", "type": 1, "class": 1}}}
