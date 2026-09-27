@@ -3,10 +3,10 @@ from scapy.packet import Raw
 
 def parse_http(packet):
     """
-    Parse a HTTP request from a packet.
+    Parse an HTTP request from a packet.
 
     Returns a dictionary containing HTTP method,
-    path, version, and headers.
+    path, version, headers, and body.
     Returns None if the packet is not HTTP.
     """
 
@@ -15,24 +15,25 @@ def parse_http(packet):
 
     payload = bytes(packet[Raw].load)
 
-    try:
-        text = payload.decode("utf-8", errors="replace")
-    except Exception:
-        return None
+    text = payload.decode("utf-8", errors="replace")
 
-    lines = text.split("\r\n")
+    parts = text.split("\r\n\r\n", 1)
+
+    header_text = parts[0]
+    body = parts[1] if len(parts) > 1 else ""
+
+    lines = header_text.split("\r\n")
 
     if not lines:
         return None
 
     request_line = lines[0]
+    request_parts = request_line.split(" ")
 
-    parts = request_line.split(" ")
-
-    if len(parts) != 3:
+    if len(request_parts) != 3:
         return None
 
-    method, path, version = parts
+    method, path, version = request_parts
 
     if method not in ("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"):
         return None
@@ -43,9 +44,6 @@ def parse_http(packet):
     headers = {}
 
     for line in lines[1:]:
-        if not line:
-            break
-
         if ":" in line:
             key, value = line.split(":", 1)
             headers[key.strip()] = value.strip()
@@ -55,4 +53,5 @@ def parse_http(packet):
         "path": path,
         "version": version,
         "headers": headers,
+        "body": body,
     }

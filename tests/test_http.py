@@ -30,3 +30,33 @@ def test_http_get():
     assert result["headers"]["Host"] == "example.com"
     assert result["headers"]["User-Agent"] == "test-client"
     assert result["headers"]["Accept"] == "*/*"
+
+
+def test_http_post():
+    payload = (
+        b"POST /ping.php HTTP/1.1\r\n"
+        b"Host: example.com\r\n"
+        b"Content-Length: 11\r\n"
+        b"Content-Type: application/x-www-form-urlencoded\r\n"
+        b"\r\n"
+        b"hello=world"
+    )
+
+    packet = (
+        IP(src="192.168.1.10", dst="192.168.1.20")
+        / TCP(sport=12345, dport=80, flags="PA")
+        / Raw(load=payload)
+    )
+
+    assert detect_application_protocol(packet) == "HTTP"
+
+    result = parse_http(packet)
+
+    assert result is not None
+    assert result["method"] == "POST"
+    assert result["path"] == "/ping.php"
+    assert result["version"] == "HTTP/1.1"
+    assert result["headers"]["Host"] == "example.com"
+    assert result["headers"]["Content-Length"] == "11"
+    assert result["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
+    assert result["body"] == "hello=world"
