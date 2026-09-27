@@ -28,6 +28,9 @@ def main():
         "tcp_handshake",
         packets[10:13]
     )
+    # TC02 - TCP Data
+    # Packet 92 contains a TCP payload
+    save_packets("tcp_data", [packets[91]]) 
 
 
 if __name__ == "__main__":

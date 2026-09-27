@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # IDS Project
 
 ## Packet Capture & Parser
@@ -93,3 +94,6 @@ All AI-assisted code will be reviewed and understood before submission.
 - [ ] JSONL output
 - [ ] Error handling
 - [ ] Required test cases
+=======
+# NT204.R11.ANTN_Ha-Thuy-Ngoc-Khue_24520873
+>>>>>>> 13f1ff9a33af101c02168cd24014f4765f0471e4
