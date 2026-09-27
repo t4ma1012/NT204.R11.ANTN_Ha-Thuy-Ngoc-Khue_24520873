@@ -9,12 +9,13 @@
 * [x] T00.3 Create requirements
 * [x] T00.4 Create AI context files
 * [ ] T00.5 Initialize Git repository
+* [ ] T00.6 Cấu hình GitHub repo: đặt tên repo theo format `Mã lớp_Họ&Tên_MSSV`, để public, nhánh mặc định là `main`
 
 ---
 
 ## Phase 1 — Core Data Model
 
-* [ ] T01 Normalized IDS Event model
+* [x] T01 Normalized IDS Event model
 
 ---
 
@@ -58,6 +59,11 @@
 
 ## Phase 7 — Required Tests
 
+> Lưu ý bắt buộc cho toàn bộ Phase 7 (theo mục 10.2 của đề bài):
+> Mỗi test case dưới đây, sau khi thực hiện, phải lưu kết quả kiểm thử (log/output/ảnh chụp)
+> vào thư mục `TEST/` và **commit riêng cho từng test case** — không được gộp nhiều test case
+> vào một commit.
+
 * [ ] T15 TCP handshake
 * [ ] T16 TCP data
 * [ ] T17 UDP
@@ -78,6 +84,7 @@
 * [ ] T27 Full test suite
 * [ ] T28 Documentation
 * [ ] T29 Assignment report
+* [ ] T29.1 Cập nhật README.md: ghi rõ công cụ AI đã dùng, mục đích sử dụng, và phần source code nào có sự hỗ trợ của AI (theo yêu cầu mục 10.5 của đề bài)
 * [ ] T30 Final repository review
 
 ---

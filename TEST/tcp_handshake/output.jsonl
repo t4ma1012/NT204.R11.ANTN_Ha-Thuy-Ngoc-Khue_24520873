@@ -1,0 +1,3 @@
+{"protocol": "TCP", "transport": {"src_port": 48350, "dst_port": 25, "flags": "S", "seq": 3339534815, "ack": 0}}
+{"protocol": "TCP", "transport": {"src_port": 25, "dst_port": 48350, "flags": "SA", "seq": 2371174921, "ack": 3339534816}}
+{"protocol": "TCP", "transport": {"src_port": 48350, "dst_port": 25, "flags": "A", "seq": 3339534816, "ack": 2371174922}}

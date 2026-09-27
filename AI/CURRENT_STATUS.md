@@ -10,7 +10,7 @@ Assignment 01 — Packet Capture & Parser
 
 ## Current Phase
 
-Project initialization.
+Phase 1 — Core Data Model.
 
 ## Completed
 
@@ -25,12 +25,11 @@ Project initialization.
 
 ## In Progress
 
-Project initialization.
+Ready for the next task after completing the normalized event model.
 
 ## Not Started
 
 * [ ] Git repository initialization
-* [ ] Normalized IDS Event model
 * [ ] Packet capture
 * [ ] PCAP reader
 * [ ] Shared parsing pipeline
@@ -65,11 +64,11 @@ Future Detection Engine
 
 ## Current Task
 
-Project setup.
+T01 — Normalized IDS Event model (completed).
 
 ## Last Completed Task
 
-Initial project structure and documentation files.
+T01 — Normalized IDS Event model.
 
 ## Known Issues
 
@@ -89,7 +88,7 @@ Development dependencies:
 
 ## Next Step
 
-Create and validate the Git repository, then begin Assignment 01 task breakdown.
+T00.5 — Initialize the Git repository.
 
 ## Important
 

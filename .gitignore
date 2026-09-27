@@ -1,95 +1,30 @@
 # Python
-
-**pycache**/
+__pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
+.pytest_cache/
 
-# Build
-
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-
-# Virtual Environment
-
-.venv/
+# Virtual environment
 venv/
-env/
-ENV/
-env.bak/
-venv.bak/
+.venv/
 
 # IDE
-
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Python tools
+# OS
+.DS_Store
+Thumbs.db
 
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
+# Generated output
+output/*.jsonl
+output/*.log
+
+# Python coverage
 .coverage
 htmlcov/
 
-# Environment / secrets
-
-.env
-.env.*
-!.env.example
-
-# Certificates / keys
-
-*.pem
-*.key
-*.crt
-
-# Logs
-
-*.log
-logs/
-
-# Runtime temporary
-
-tmp/
-temp/
+# Temporary files
 *.tmp
+*.swp
 
-# Generated output
-
-output/*
-!output/.gitkeep
-
-# PCAP
-
-data/pcap/*
-!data/pcap/.gitkeep
-
-# Generated datasets
-
-data/generated/
-data/cache/
-
-# AI temporary files
-
-AI/handoffs/draft_*
-AI/tmp/
-
-# Backup
-
-*.bak
-*.backup
-*~
+AI/*

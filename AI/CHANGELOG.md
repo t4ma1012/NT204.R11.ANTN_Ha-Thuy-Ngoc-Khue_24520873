@@ -2,6 +2,16 @@
 
 ## 2026-09-21
 
+### T01 — Normalized IDS Event Model
+
+Implemented the JSON-compatible normalized event boundary with dataclasses:
+
+* `NormalizedEvent` with timestamp, network, transport, application, and metadata
+* Extensible application data for HTTP, DNS, SMTP, and future protocols
+* Explicit UNKNOWN and malformed-event fields
+* `to_dict()` and `to_json()` serialization methods
+* Unit tests for construction, serialization, empty data, and malformed data
+
 ### Project Initialization
 
 Created initial IDS project structure.
