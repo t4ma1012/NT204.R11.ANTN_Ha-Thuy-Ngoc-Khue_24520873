@@ -3,6 +3,7 @@ from src.parser.transport.udp import parse_udp
 from src.parser.application.detector import detect_application_protocol
 from src.parser.application.http import parse_http
 from src.parser.application.dns import parse_dns
+from src.parser.application.smtp import parse_smtp
 
 
 class ParserPipeline:
@@ -30,6 +31,16 @@ class ParserPipeline:
                         "protocol": "HTTP",
                         "transport": tcp_data,
                         "application": http_data,
+                    }
+
+            if application_protocol == "SMTP":
+                smtp_data = parse_smtp(packet)
+
+                if smtp_data is not None:
+                    return {
+                        "protocol": "SMTP",
+                        "transport": tcp_data,
+                        "application": smtp_data,
                     }
 
             return {

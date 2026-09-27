@@ -19,7 +19,7 @@ def detect_application_protocol(packet):
 
     text = payload.decode("utf-8", errors="replace")
 
-    first_line = text.split("\r\n", 1)[0]
+    first_line = text.splitlines()[0].strip() if text.splitlines() else ""
 
     # HTTP response
     if first_line.startswith("HTTP/"):
@@ -30,5 +30,16 @@ def detect_application_protocol(packet):
         ("GET ", "POST ", "PUT ", "DELETE ", "HEAD ", "OPTIONS ")
     ):
         return "HTTP"
+
+    # SMTP command
+    upper_line = first_line.upper()
+
+    if (
+        upper_line.startswith("EHLO ")
+        or upper_line.startswith("HELO ")
+        or upper_line.startswith("MAIL FROM:")
+        or upper_line.startswith("RCPT TO:")
+    ):
+        return "SMTP"
 
     return None

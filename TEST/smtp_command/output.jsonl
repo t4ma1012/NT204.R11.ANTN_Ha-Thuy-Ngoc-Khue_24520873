@@ -1,0 +1,1 @@
+{"protocol": "SMTP", "transport": {"src_port": 48350, "dst_port": 25, "flags": "PA", "seq": 3339534816, "ack": 2371174922, "payload_length": 14, "payload": "EHLO attacker\n"}, "application": {"type": "command", "command": "EHLO", "argument": "attacker"}}
