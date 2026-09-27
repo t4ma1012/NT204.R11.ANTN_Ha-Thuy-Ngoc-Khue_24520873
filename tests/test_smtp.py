@@ -16,3 +16,18 @@ def test_smtp_ehlo():
     assert result["type"] == "command"
     assert result["command"] == "EHLO"
     assert result["argument"] == "attacker"
+
+
+def test_smtp_response():
+    packet = (
+        IP(src="10.82.232.33", dst="10.81.31.230")
+        / TCP(sport=25, dport=48350, flags="PA")
+        / Raw(load=b"220 victim.sanogo.de ESMTP Postfix (Ubuntu)\r\n")
+    )
+
+    result = parse_smtp(packet)
+
+    assert result is not None
+    assert result["type"] == "response"
+    assert result["status_code"] == 220
+    assert result["message"] == "victim.sanogo.de ESMTP Postfix (Ubuntu)"

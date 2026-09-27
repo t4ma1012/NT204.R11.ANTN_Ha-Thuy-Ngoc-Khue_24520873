@@ -1,0 +1,1 @@
+{"protocol": "SMTP", "transport": {"src_port": 25, "dst_port": 48350, "flags": "PA", "seq": 2371174922, "ack": 3339534850, "payload_length": 45, "payload": "220 victim.sanogo.de ESMTP Postfix (Ubuntu)\r\n"}, "application": {"type": "response", "status_code": 220, "message": "victim.sanogo.de ESMTP Postfix (Ubuntu)"}}

@@ -1,14 +1,8 @@
+import re
 from scapy.packet import Raw
 
 
 def parse_smtp(packet):
-    """
-    Parse an SMTP command from a packet.
-
-    Returns a dictionary containing SMTP command information.
-    Returns None if the packet does not contain an SMTP command.
-    """
-
     if not packet.haslayer(Raw):
         return None
 
@@ -22,9 +16,20 @@ def parse_smtp(packet):
 
     for line in lines:
         line = line.strip()
-
         upper_line = line.upper()
 
+        # SMTP response: 3-digit status code
+        if re.match(r"^\d{3}(?:[ -]|$)", line):
+            status_code = int(line[:3])
+            message = line[3:].strip()
+
+            return {
+                "type": "response",
+                "status_code": status_code,
+                "message": message,
+            }
+
+        # SMTP commands
         if upper_line.startswith("EHLO "):
             return {
                 "type": "command",
