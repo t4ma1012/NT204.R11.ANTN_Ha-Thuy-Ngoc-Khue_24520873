@@ -60,3 +60,33 @@ def test_http_post():
     assert result["headers"]["Content-Length"] == "11"
     assert result["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
     assert result["body"] == "hello=world"
+
+def test_http_response():
+    payload = (
+        b"HTTP/1.1 200 OK\r\n"
+        b"Server: Apache\r\n"
+        b"Content-Length: 5\r\n"
+        b"Content-Type: text/html\r\n"
+        b"\r\n"
+        b"Hello"
+    )
+
+    packet = (
+        IP(src="192.168.1.20", dst="192.168.1.10")
+        / TCP(sport=80, dport=12345, flags="PA")
+        / Raw(load=payload)
+    )
+
+    assert detect_application_protocol(packet) == "HTTP"
+
+    result = parse_http(packet)
+
+    assert result is not None
+    assert result["type"] == "response"
+    assert result["version"] == "HTTP/1.1"
+    assert result["status_code"] == 200
+    assert result["reason"] == "OK"
+    assert result["headers"]["Server"] == "Apache"
+    assert result["headers"]["Content-Length"] == "5"
+    assert result["headers"]["Content-Type"] == "text/html"
+    assert result["body"] == "Hello"
