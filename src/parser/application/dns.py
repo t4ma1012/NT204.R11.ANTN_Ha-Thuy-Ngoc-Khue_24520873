@@ -18,6 +18,7 @@ def parse_dns(packet):
         "type": "query" if dns.qr == 0 else "response",
     }
 
+    # Parse DNS question
     if dns.qd is not None:
         question = dns.qd
 
@@ -30,5 +31,30 @@ def parse_dns(packet):
             "type": question.qtype,
             "class": question.qclass,
         }
+
+    # Parse DNS answer
+    if dns.an is not None:
+        answers = []
+
+        for answer in dns.an:
+            rrname = answer.rrname
+
+            if isinstance(rrname, bytes):
+                rrname = rrname.decode("utf-8", errors="replace")
+
+            rdata = answer.rdata
+
+            if isinstance(rdata, bytes):
+                rdata = rdata.decode("utf-8", errors="replace")
+
+            answers.append({
+                "name": rrname,
+                "type": answer.type,
+                "class": answer.rclass,
+                "ttl": answer.ttl,
+                "data": rdata,
+            })
+
+        result["answers"] = answers
 
     return result
