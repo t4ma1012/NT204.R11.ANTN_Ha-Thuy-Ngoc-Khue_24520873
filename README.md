@@ -1,21 +1,20 @@
-<<<<<<< HEAD
-# IDS Project
+# IDS
 
 ## Packet Capture & Parser
 
-This project implements the Packet Capture & Parser module for a simple Intrusion Detection System (IDS).
+Dự án này triển khai module Packet Capture & Parser cho một hệ thống Intrusion Detection System (IDS) đơn giản.
 
-The module is designed to:
+Module được thiết kế để:
 
-- Capture packets from a network interface.
-- Read packets from PCAP files.
-- Parse IPv4, TCP, UDP, HTTP/1.x, DNS, and SMTP traffic.
-- Detect application protocols.
-- Convert packets into a normalized IDS event.
-- Write parsed events in JSON Lines format.
-- Handle malformed and unsupported packets without crashing.
+- Thu thập packet từ một network interface.
+- Đọc packet từ file PCAP.
+- Parse lưu lượng IPv4, TCP, UDP, HTTP/1.x, DNS và SMTP.
+- Nhận diện application protocol.
+- Chuyển packet thành một normalized IDS event.
+- Ghi các event đã parse ra định dạng JSON Lines.
+- Xử lý packet malformed và protocol không hỗ trợ mà không bị crash.
 
-## Input Modes
+## Chế độ Input
 
 ### Live Capture
 
@@ -31,17 +30,17 @@ python main.py --pcap data/pcap/test.pcap
 
 ## Output
 
-The parsed events will be written in JSON Lines format.
+Các event đã parse sẽ được ghi ra định dạng JSON Lines.
 
-Default output:
+Output mặc định:
 
 ```text
 output/events.jsonl
 ```
 
-Each line represents one packet/event.
+Mỗi dòng tương ứng với một packet/event.
 
-## Project Structure
+## Cấu trúc Project
 
 ```text
 IDS-Project/
@@ -67,33 +66,13 @@ IDS-Project/
 └── README.md
 ```
 
-## AI Usage
+## Sử dụng AI
 
-AI tools may be used during development for:
+Các công cụ AI có thể được sử dụng trong quá trình phát triển để:
 
-- Explaining networking and packet parsing concepts.
-- Suggesting project structure.
-- Debugging errors.
-- Reviewing code.
+- Giải thích các khái niệm về networking và packet parsing.
+- Đề xuất cấu trúc project.
+- Debug lỗi.
+- Review code.
 
-All AI-assisted code will be reviewed and understood before submission.
-
-## Current Status
-
-- [x] Project setup
-- [ ] Packet capture
-- [ ] PCAP reader
-- [ ] IPv4 parser
-- [ ] TCP parser
-- [ ] UDP parser
-- [ ] Application protocol detection
-- [ ] HTTP parser
-- [ ] DNS parser
-- [ ] SMTP parser
-- [ ] Normalized IDS event
-- [ ] JSONL output
-- [ ] Error handling
-- [ ] Required test cases
-=======
-# NT204.R11.ANTN_Ha-Thuy-Ngoc-Khue_24520873
->>>>>>> 13f1ff9a33af101c02168cd24014f4765f0471e4
+Toàn bộ mã nguồn có sử dụng AI sẽ được review và hiểu rõ trước khi nộp bài.
