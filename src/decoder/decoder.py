@@ -7,58 +7,25 @@ from urllib.parse import unquote, unquote_plus
 
 
 class Decoder:
-    """
-    Decode representation-level encodings from normalized IDS events.
-
-    The decoder preserves original values and adds decoded values
-    so that raw evidence is not lost.
-    """
-
     def decode_uri(self, uri):
-        """
-        Decode percent-encoded URI.
-
-        '+' is preserved because this operation is URI decoding,
-        not application/x-www-form-urlencoded decoding.
-        """
         if not isinstance(uri, str):
             return uri
 
         return unquote(uri)
 
     def decode_form_value(self, value):
-        """
-        Decode application/x-www-form-urlencoded value.
-
-        '+' is converted to a space.
-        """
         if not isinstance(value, str):
             return value
 
         return unquote_plus(value)
 
     def decode_html(self, text):
-        """
-        Decode HTML entities such as:
-
-            &lt;script&gt;
-
-        into:
-
-            <script>
-        """
         if not isinstance(text, str):
             return text
 
         return html.unescape(text)
 
     def decode_base64(self, value):
-        """
-        Decode Base64 text safely.
-
-        Returns:
-            (decoded_text, status)
-        """
         if not isinstance(value, str):
             return value, "invalid"
 
@@ -71,12 +38,6 @@ class Decoder:
             return value, "error"
 
     def decode_quoted_printable(self, value):
-        """
-        Decode quoted-printable text safely.
-
-        Returns:
-            (decoded_text, status)
-        """
         if not isinstance(value, str):
             return value, "invalid"
 
@@ -88,11 +49,6 @@ class Decoder:
             return value, "error"
 
     def decode_text(self, value, encoding="utf-8"):
-        """
-        Safely decode raw bytes into text.
-
-        Invalid bytes are replaced instead of crashing.
-        """
         if isinstance(value, str):
             return value, "success"
 
@@ -101,6 +57,7 @@ class Decoder:
 
         try:
             return bytes(value).decode(encoding), "success"
+
         except UnicodeDecodeError:
             return (
                 bytes(value).decode(encoding, errors="replace"),
@@ -108,11 +65,6 @@ class Decoder:
             )
 
     def decode_event(self, event):
-        """
-        Decode a normalized IDS event.
-
-        The original event is not modified.
-        """
         result = copy.deepcopy(event)
 
         application = result.get("application")
@@ -131,10 +83,6 @@ class Decoder:
         return result
 
     def _decode_http(self, application):
-        """
-        Decode HTTP URI and text fields.
-        """
-
         path = application.get("path")
 
         if isinstance(path, str):
@@ -148,10 +96,6 @@ class Decoder:
             application["decoded_body"] = self.decode_html(body)
 
     def _decode_smtp(self, application):
-        """
-        Decode SMTP/MIME-related content when possible.
-        """
-
         body = application.get("body")
 
         if not isinstance(body, str):
@@ -159,9 +103,8 @@ class Decoder:
 
         application["raw_body"] = body
 
-        encoding = application.get("headers", {}).get(
-            "Content-Transfer-Encoding"
-        )
+        headers = application.get("headers", {})
+        encoding = headers.get("Content-Transfer-Encoding")
 
         if not isinstance(encoding, str):
             application["decoded_body"] = body
