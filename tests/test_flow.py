@@ -66,3 +66,41 @@ def test_tcp_handshake():
         "TEST/flow/tcp_handshake/output.json",
         flow.to_dict(),
     )
+
+def test_bidirectional_same_flow():
+    tracker = FlowTracker()
+
+    event_a = {
+        "timestamp": 1,
+        "protocol": "TCP",
+        "src_ip": "10.0.0.1",
+        "dst_ip": "10.0.0.2",
+        "src_port": 5000,
+        "dst_port": 80,
+        "flags": "A",
+        "payload_length": 100,
+    }
+
+    event_b = {
+        "timestamp": 2,
+        "protocol": "TCP",
+        "src_ip": "10.0.0.2",
+        "dst_ip": "10.0.0.1",
+        "src_port": 80,
+        "dst_port": 5000,
+        "flags": "A",
+        "payload_length": 200,
+    }
+
+    flow_a = tracker.process(event_a)
+    flow_b = tracker.process(event_b)
+
+    assert flow_a.flow_id == flow_b.flow_id
+    assert flow_b.packet_count == 2
+    assert flow_b.forward_packets == 1
+    assert flow_b.backward_packets == 1
+
+    write_output(
+        "TEST/flow/bidirectional/output.json",
+        flow_b.to_dict(),
+    )

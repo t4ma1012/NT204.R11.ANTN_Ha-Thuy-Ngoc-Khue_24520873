@@ -1,0 +1,28 @@
+{
+  "flow_id": "TCP-10.0.0.1:5000-10.0.0.2:80",
+  "protocol": "TCP",
+  "endpoints": [
+    [
+      "10.0.0.1",
+      5000
+    ],
+    [
+      "10.0.0.2",
+      80
+    ]
+  ],
+  "start_time": 1,
+  "last_seen": 2,
+  "duration": 1,
+  "packet_count": 2,
+  "byte_count": 300,
+  "forward_packets": 1,
+  "backward_packets": 1,
+  "forward_bytes": 100,
+  "backward_bytes": 200,
+  "syn_count": 0,
+  "ack_count": 2,
+  "fin_count": 0,
+  "rst_count": 0,
+  "tcp_state": "NEW"
+}
