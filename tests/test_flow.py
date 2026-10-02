@@ -223,3 +223,36 @@ def test_concurrent_flows():
             for flow in flows
         ],
     )
+
+def test_idle_timeout():
+    tracker = FlowTracker(idle_timeout=10)
+
+    event = {
+        "timestamp": 1,
+        "protocol": "UDP",
+        "src_ip": "10.0.0.1",
+        "dst_ip": "8.8.8.8",
+        "src_port": 50000,
+        "dst_port": 53,
+        "payload_length": 20,
+    }
+
+    tracker.process(event)
+
+    assert len(tracker.get_active_flows()) == 1
+
+    expired = tracker.expire(12)
+
+    assert len(expired) == 1
+    assert len(tracker.get_active_flows()) == 0
+
+    write_output(
+        "TEST/flow/timeout/output.json",
+        {
+            "expired": [
+                flow.to_dict()
+                for flow in expired
+            ],
+            "active_flows": [],
+        },
+    )
