@@ -3,7 +3,7 @@ from pathlib import Path
 
 from src.decoder.decoder import Decoder
 
-
+# T01
 def write_output(path, data):
     output_file = Path(path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -12,7 +12,7 @@ def write_output(path, data):
         json.dumps(data, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
-
+#T02
 
 def test_http_url_percent_decode():
     decoder = Decoder()
@@ -45,7 +45,7 @@ def test_http_url_percent_decode():
         result,
     )
 
-
+# T03
 def test_html_entity_decode():
     decoder = Decoder()
 
@@ -77,7 +77,7 @@ def test_html_entity_decode():
         result,
     )
 
-
+#T04
 def test_smtp_mime_base64_and_quoted_printable():
     decoder = Decoder()
 
@@ -138,5 +138,32 @@ def test_smtp_mime_base64_and_quoted_printable():
 
     write_output(
         "TEST/decoder/smtp_mime/output.json",
+        output,
+    )
+
+# T05
+def test_invalid_utf8_bytes():
+    decoder = Decoder()
+
+    invalid_bytes = b"Hello \xff World"
+
+    decoded, status = decoder.decode_text(invalid_bytes)
+
+    assert status == "partial"
+    assert "\ufffd" in decoded
+
+    output = {
+        "input": {
+            "type": "bytes",
+            "value": list(invalid_bytes),
+        },
+        "output": {
+            "decoded": decoded,
+            "decode_status": status,
+        },
+    }
+
+    write_output(
+        "TEST/decoder/invalid_bytes/output.json",
         output,
     )

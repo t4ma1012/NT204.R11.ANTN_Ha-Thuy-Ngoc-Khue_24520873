@@ -1,0 +1,24 @@
+{
+  "input": {
+    "type": "bytes",
+    "value": [
+      72,
+      101,
+      108,
+      108,
+      111,
+      32,
+      255,
+      32,
+      87,
+      111,
+      114,
+      108,
+      100
+    ]
+  },
+  "output": {
+    "decoded": "Hello � World",
+    "decode_status": "partial"
+  }
+}
