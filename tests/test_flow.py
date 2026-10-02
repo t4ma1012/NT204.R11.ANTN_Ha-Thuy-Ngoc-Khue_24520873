@@ -181,3 +181,45 @@ def test_udp_flow():
         "TEST/flow/udp/output.json",
         flow.to_dict(),
     )
+
+def test_concurrent_flows():
+    tracker = FlowTracker()
+
+    events = [
+        {
+            "timestamp": 1,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.1",
+            "dst_ip": "10.0.0.2",
+            "src_port": 5000,
+            "dst_port": 80,
+            "flags": "S",
+            "payload_length": 0,
+        },
+        {
+            "timestamp": 2,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.1",
+            "dst_ip": "10.0.0.2",
+            "src_port": 5001,
+            "dst_port": 80,
+            "flags": "S",
+            "payload_length": 0,
+        },
+    ]
+
+    flows = [
+        tracker.process(event)
+        for event in events
+    ]
+
+    assert len(tracker.get_active_flows()) == 2
+    assert flows[0].flow_id != flows[1].flow_id
+
+    write_output(
+        "TEST/flow/concurrent/output.json",
+        [
+            flow.to_dict()
+            for flow in flows
+        ],
+    )

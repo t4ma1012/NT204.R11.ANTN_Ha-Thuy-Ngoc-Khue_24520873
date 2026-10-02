@@ -1,0 +1,58 @@
+[
+  {
+    "flow_id": "TCP-10.0.0.1:5000-10.0.0.2:80",
+    "protocol": "TCP",
+    "endpoints": [
+      [
+        "10.0.0.1",
+        5000
+      ],
+      [
+        "10.0.0.2",
+        80
+      ]
+    ],
+    "start_time": 1,
+    "last_seen": 1,
+    "duration": 0,
+    "packet_count": 1,
+    "byte_count": 0,
+    "forward_packets": 1,
+    "backward_packets": 0,
+    "forward_bytes": 0,
+    "backward_bytes": 0,
+    "syn_count": 1,
+    "ack_count": 0,
+    "fin_count": 0,
+    "rst_count": 0,
+    "tcp_state": "HANDSHAKE"
+  },
+  {
+    "flow_id": "TCP-10.0.0.1:5001-10.0.0.2:80",
+    "protocol": "TCP",
+    "endpoints": [
+      [
+        "10.0.0.1",
+        5001
+      ],
+      [
+        "10.0.0.2",
+        80
+      ]
+    ],
+    "start_time": 2,
+    "last_seen": 2,
+    "duration": 0,
+    "packet_count": 1,
+    "byte_count": 0,
+    "forward_packets": 1,
+    "backward_packets": 0,
+    "forward_bytes": 0,
+    "backward_bytes": 0,
+    "syn_count": 1,
+    "ack_count": 0,
+    "fin_count": 0,
+    "rst_count": 0,
+    "tcp_state": "HANDSHAKE"
+  }
+]
