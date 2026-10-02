@@ -256,3 +256,75 @@ def test_idle_timeout():
             "active_flows": [],
         },
     )
+def test_flow_statistics():
+    tracker = FlowTracker()
+
+    events = [
+        {
+            "timestamp": 1,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.1",
+            "dst_ip": "10.0.0.2",
+            "src_port": 5000,
+            "dst_port": 80,
+            "flags": "S",
+            "payload_length": 0,
+        },
+        {
+            "timestamp": 2,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.2",
+            "dst_ip": "10.0.0.1",
+            "src_port": 80,
+            "dst_port": 5000,
+            "flags": "SA",
+            "payload_length": 0,
+        },
+        {
+            "timestamp": 3,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.1",
+            "dst_ip": "10.0.0.2",
+            "src_port": 5000,
+            "dst_port": 80,
+            "flags": "A",
+            "payload_length": 100,
+        },
+        {
+            "timestamp": 4,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.2",
+            "dst_ip": "10.0.0.1",
+            "src_port": 80,
+            "dst_port": 5000,
+            "flags": "A",
+            "payload_length": 200,
+        },
+    ]
+
+    flow = None
+
+    for event in events:
+        flow = tracker.process(event)
+
+    assert flow.packet_count == 4
+    assert flow.byte_count == 300
+
+    assert flow.forward_packets == 2
+    assert flow.backward_packets == 2
+
+    assert flow.forward_bytes == 100
+    assert flow.backward_bytes == 200
+
+    assert flow.syn_count == 2
+    assert flow.ack_count == 2
+
+    assert flow.duration() == 3
+
+    assert len(tracker.get_active_flows()) == 1
+
+    write_output(
+        "TEST/flow/statistics/output.json",
+        flow.to_dict(),
+    )
+    

@@ -12,17 +12,17 @@
     ]
   ],
   "start_time": 1,
-  "last_seen": 2,
-  "duration": 1,
-  "packet_count": 2,
+  "last_seen": 4,
+  "duration": 3,
+  "packet_count": 4,
   "byte_count": 300,
-  "forward_packets": 1,
-  "backward_packets": 1,
+  "forward_packets": 2,
+  "backward_packets": 2,
   "forward_bytes": 100,
   "backward_bytes": 200,
-  "syn_count": 0,
-  "ack_count": 0,
+  "syn_count": 2,
+  "ack_count": 2,
   "fin_count": 0,
   "rst_count": 0,
-  "tcp_state": "NEW"
+  "tcp_state": "ESTABLISHED"
 }

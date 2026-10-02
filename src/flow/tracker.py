@@ -65,16 +65,13 @@ class FlowTracker:
                 flow.tcp_state = "HANDSHAKE"
 
             return
-
-        if "A" in flags:
-            flow.ack_count += 1
-
         if "F" in flags:
             flow.fin_count += 1
             flow.tcp_state = "CLOSING"
             return
 
         if flow.tcp_state == "HANDSHAKE" and "A" in flags:
+            flow.ack_count += 1
             flow.tcp_state = "ESTABLISHED"
 
     def process(self, event):
