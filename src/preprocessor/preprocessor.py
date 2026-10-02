@@ -60,9 +60,13 @@ class Preprocessor:
                 )
 
                 if parsed.tzinfo is None:
-                    parsed = parsed.replace(tzinfo=timezone.utc)
+                    parsed = parsed.replace(
+                        tzinfo=timezone.utc
+                    )
 
-                return parsed.astimezone(timezone.utc).isoformat()
+                return parsed.astimezone(
+                    timezone.utc
+                ).isoformat()
 
             except ValueError:
                 return timestamp
@@ -70,21 +74,46 @@ class Preprocessor:
         return timestamp
 
     def process(self, event):
+        # Event không phải dictionary
+        if not isinstance(event, dict):
+            return {
+                "preprocess_status": "invalid",
+                "processing_action": "drop",
+                "reason": "event must be a dictionary",
+            }
+
+        # Copy event để không sửa dữ liệu đầu vào
         result = dict(event)
+
+        # -------------------------
+        # Normalize protocol
+        # -------------------------
 
         result["protocol"] = self.normalize_protocol(
             result.get("protocol")
         )
 
+        # -------------------------
+        # Normalize IP
+        # -------------------------
+
         if "src_ip" in result:
             result["src_ip"] = self.normalize_ip(
                 result["src_ip"]
             )
+        else:
+            result["src_ip"] = None
 
         if "dst_ip" in result:
             result["dst_ip"] = self.normalize_ip(
                 result["dst_ip"]
             )
+        else:
+            result["dst_ip"] = None
+
+        # -------------------------
+        # Normalize application
+        # -------------------------
 
         application = result.get("application")
 
@@ -100,15 +129,57 @@ class Preprocessor:
                 application["headers"] = self.normalize_headers(
                     application["headers"]
                 )
+            else:
+                application["headers"] = {}
 
             result["application"] = application
+
+        elif application is None:
+            result["application"] = {}
+
+        # -------------------------
+        # Normalize timestamp
+        # -------------------------
 
         if "timestamp" in result:
             result["timestamp"] = self.normalize_timestamp(
                 result["timestamp"]
             )
+        else:
+            result["timestamp"] = None
 
-        result["preprocess_status"] = "valid"
-        result["processing_action"] = "normalized"
+        # -------------------------
+        # Validate required fields
+        # -------------------------
+
+        missing_fields = []
+
+        required_fields = [
+            "timestamp",
+            "protocol",
+            "src_ip",
+            "dst_ip",
+        ]
+
+        for field in required_fields:
+            value = result.get(field)
+
+            if value is None or value == "":
+                missing_fields.append(field)
+
+        # -------------------------
+        # Preprocess status
+        # -------------------------
+
+        if missing_fields:
+            result["preprocess_status"] = "partial"
+            result["processing_action"] = "keep"
+            result["reason"] = (
+                "missing required fields: "
+                + ", ".join(missing_fields)
+            )
+        else:
+            result["preprocess_status"] = "valid"
+            result["processing_action"] = "normalized"
 
         return result
