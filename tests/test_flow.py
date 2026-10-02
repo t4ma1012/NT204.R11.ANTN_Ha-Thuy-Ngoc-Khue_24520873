@@ -104,3 +104,43 @@ def test_bidirectional_same_flow():
         "TEST/flow/bidirectional/output.json",
         flow_b.to_dict(),
     )
+
+
+def test_tcp_close():
+    tracker = FlowTracker()
+
+    events = [
+        {
+            "timestamp": 1,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.1",
+            "dst_ip": "10.0.0.2",
+            "src_port": 5000,
+            "dst_port": 80,
+            "flags": "F",
+            "payload_length": 0,
+        },
+        {
+            "timestamp": 2,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.2",
+            "dst_ip": "10.0.0.1",
+            "src_port": 80,
+            "dst_port": 5000,
+            "flags": "F",
+            "payload_length": 0,
+        },
+    ]
+
+    flow = None
+
+    for event in events:
+        flow = tracker.process(event)
+
+    assert flow.tcp_state == "CLOSED"
+    assert flow.fin_count == 2
+
+    write_output(
+        "TEST/flow/tcp_close/output.json",
+        flow.to_dict(),
+    )
