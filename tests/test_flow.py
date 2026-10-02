@@ -144,3 +144,40 @@ def test_tcp_close():
         "TEST/flow/tcp_close/output.json",
         flow.to_dict(),
     )
+
+def test_udp_flow():
+    tracker = FlowTracker()
+
+    query = {
+        "timestamp": 1,
+        "protocol": "UDP",
+        "src_ip": "10.0.0.1",
+        "dst_ip": "8.8.8.8",
+        "src_port": 50000,
+        "dst_port": 53,
+        "payload_length": 32,
+    }
+
+    response = {
+        "timestamp": 2,
+        "protocol": "UDP",
+        "src_ip": "8.8.8.8",
+        "dst_ip": "10.0.0.1",
+        "src_port": 53,
+        "dst_port": 50000,
+        "payload_length": 64,
+    }
+
+    flow = tracker.process(query)
+    flow = tracker.process(response)
+
+    assert flow.protocol == "UDP"
+    assert flow.packet_count == 2
+    assert flow.byte_count == 96
+    assert flow.forward_packets == 1
+    assert flow.backward_packets == 1
+
+    write_output(
+        "TEST/flow/udp/output.json",
+        flow.to_dict(),
+    )
