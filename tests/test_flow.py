@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from src.preprocessor.preprocessor import Preprocessor
 from src.flow.tracker import FlowTracker
 
 
@@ -327,4 +328,31 @@ def test_flow_statistics():
         "TEST/flow/statistics/output.json",
         flow.to_dict(),
     )
-    
+def test_malformed_event():
+    preprocessor = Preprocessor()
+
+    event = {
+        "protocol": None,
+        "src_port": "invalid",
+    }
+
+    result = preprocessor.process(event)
+
+    assert result["preprocess_status"] == "partial"
+    assert result["processing_action"] == "keep"
+
+    assert result["timestamp"] is None
+    assert result["src_ip"] is None
+    assert result["dst_ip"] is None
+    assert result["application"] == {}
+
+    assert "reason" in result
+    assert "timestamp" in result["reason"]
+    assert "protocol" in result["reason"]
+    assert "src_ip" in result["reason"]
+    assert "dst_ip" in result["reason"]
+
+    write_output(
+        "TEST/flow/malformed/output.json",
+        result,
+    )

@@ -1,0 +1,11 @@
+{
+  "protocol": null,
+  "src_port": "invalid",
+  "src_ip": null,
+  "dst_ip": null,
+  "application": {},
+  "timestamp": null,
+  "preprocess_status": "partial",
+  "processing_action": "keep",
+  "reason": "missing required fields: timestamp, protocol, src_ip, dst_ip"
+}
