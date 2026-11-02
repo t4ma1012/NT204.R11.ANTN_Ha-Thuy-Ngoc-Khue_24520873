@@ -1,0 +1,5 @@
+# This TCP rule has content which matches the fixture payload.
+alert tcp 10.0.0.1 12345 -> 10.0.0.2 80 (msg:"Header gate"; content:"MATCHME"; sid:1000017; rev:1;)
+
+# A UDP rule verifies that protocol-mismatched events are also filtered.
+alert udp 10.0.0.1 12345 -> 10.0.0.2 53 (msg:"UDP header gate"; content:"MATCHME"; sid:1000018; rev:1;)

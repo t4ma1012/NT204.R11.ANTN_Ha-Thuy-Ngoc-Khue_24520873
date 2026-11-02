@@ -1,0 +1,16 @@
+{
+  "mismatch_results": {
+    "protocol": [],
+    "ip": [],
+    "port": []
+  },
+  "content_checks_after_mismatches": [],
+  "detection_events_after_mismatches": [],
+  "matching_header_detection_events": [
+    {
+      "rule_text": "alert tcp 10.0.0.1 12345 -> 10.0.0.2 80 (msg:\"Header gate\"; content:\"MATCHME\"; sid:1000017; rev:1;)",
+      "src_ip": "10.0.0.1",
+      "dst_ip": "10.0.0.2"
+    }
+  ]
+}

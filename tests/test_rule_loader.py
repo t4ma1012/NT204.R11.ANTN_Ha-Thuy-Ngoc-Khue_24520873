@@ -3,6 +3,7 @@ from pathlib import Path
 
 from src.engine.rule_loader import RuleLoader
 from src.engine.header_matcher import HeaderMatcher
+from src.engine.evaluator import RuleEvaluationEngine
 from src.engine.rule_parser import RuleParser
 from src.engine.repository import RuleRepository
 
@@ -272,6 +273,105 @@ def test_repository_index_returns_matching_protocol_and_header_candidates():
             {
                 name: [rule["rule_text"] for rule in repository.get_candidates(event)]
                 for name, event in events.items()
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_header_mismatch_is_filtered_before_content_matching():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T07" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T07" / "output.json"
+
+    rules = RuleLoader().load_file(input_path, RuleParser().parse)
+    content_checks = []
+    generated_events = []
+
+    def content_matcher(rule, event):
+        content_checks.append(rule["rule_text"])
+        return (
+            '"MATCHME"' in rule["options"]
+            and "MATCHME" in event["payload"]
+        )
+
+    def detection_event_generator(rule, event):
+        detection_event = {
+            "rule_text": rule["rule_text"],
+            "src_ip": event["src_ip"],
+            "dst_ip": event["dst_ip"],
+        }
+        generated_events.append(detection_event)
+        return detection_event
+
+    repository = RuleRepository()
+    repository.add_rule(rules[0])
+    evaluator = RuleEvaluationEngine(
+        repository, content_matcher, detection_event_generator
+    )
+    matching_payload = "request contains MATCHME"
+    mismatched_events = {
+        "protocol": {
+            "protocol": "UDP",
+            "src_ip": "10.0.0.1",
+            "src_port": 12345,
+            "dst_ip": "10.0.0.2",
+            "dst_port": 80,
+            "payload": matching_payload,
+        },
+        "ip": {
+            "protocol": "TCP",
+            "src_ip": "198.51.100.10",
+            "src_port": 12345,
+            "dst_ip": "10.0.0.2",
+            "dst_port": 80,
+            "payload": matching_payload,
+        },
+        "port": {
+            "protocol": "TCP",
+            "src_ip": "10.0.0.1",
+            "src_port": 12345,
+            "dst_ip": "10.0.0.2",
+            "dst_port": 443,
+            "payload": matching_payload,
+        },
+    }
+
+    mismatch_results = {
+        mismatch: evaluator.evaluate(event)
+        for mismatch, event in mismatched_events.items()
+    }
+
+    assert mismatch_results == {
+        "protocol": [],
+        "ip": [],
+        "port": [],
+    }
+    assert content_checks == []
+    assert generated_events == []
+
+    matching_event = {
+        "protocol": "TCP",
+        "src_ip": "10.0.0.1",
+        "src_port": 12345,
+        "dst_ip": "10.0.0.2",
+        "dst_port": 80,
+        "payload": matching_payload,
+    }
+    matching_result = evaluator.evaluate(matching_event)
+
+    assert matching_result == generated_events
+    assert len(matching_result) == 1
+    assert content_checks == [rules[0]["rule_text"]]
+
+    output_path.write_text(
+        json.dumps(
+            {
+                "mismatch_results": mismatch_results,
+                "content_checks_after_mismatches": [],
+                "detection_events_after_mismatches": [],
+                "matching_header_detection_events": matching_result,
             },
             indent=2,
         ),
