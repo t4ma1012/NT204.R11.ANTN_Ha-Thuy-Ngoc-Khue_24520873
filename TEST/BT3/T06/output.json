@@ -1,0 +1,12 @@
+{
+  "tcp_cidr_and_wildcard": [
+    "alert tcp 10.1.0.0/16 1024:65535 -> 192.0.2.0/24 443 (msg:\"TCP scoped\"; sid:1000012; rev:1;)",
+    "alert tcp any any -> any any (msg:\"TCP wildcard\"; sid:1000013; rev:1;)"
+  ],
+  "udp_wildcard": [
+    "alert udp any any -> any 53 (msg:\"UDP DNS wildcard\"; sid:1000015; rev:1;)"
+  ],
+  "udp_cidr_and_port_ranges": [
+    "alert udp 10.1.0.0/16 1000:2000 -> 192.0.2.0/24 5000:6000 (msg:\"UDP scoped\"; sid:1000016; rev:1;)"
+  ]
+}

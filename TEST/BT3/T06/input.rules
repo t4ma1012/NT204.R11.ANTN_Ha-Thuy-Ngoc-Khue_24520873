@@ -1,0 +1,14 @@
+# TCP rule scoped to CIDRs and a destination port.
+alert tcp 10.1.0.0/16 1024:65535 -> 192.0.2.0/24 443 (msg:"TCP scoped"; sid:1000012; rev:1;)
+
+# TCP rule with wildcard IP addresses and ports.
+alert tcp any any -> any any (msg:"TCP wildcard"; sid:1000013; rev:1;)
+
+# TCP rule for a different source network; it must not be a candidate.
+alert tcp 198.51.100.0/24 any -> any 443 (msg:"Other TCP source"; sid:1000014; rev:1;)
+
+# UDP rule with wildcard IP addresses and a DNS port.
+alert udp any any -> any 53 (msg:"UDP DNS wildcard"; sid:1000015; rev:1;)
+
+# UDP rule scoped to CIDRs and port ranges.
+alert udp 10.1.0.0/16 1000:2000 -> 192.0.2.0/24 5000:6000 (msg:"UDP scoped"; sid:1000016; rev:1;)

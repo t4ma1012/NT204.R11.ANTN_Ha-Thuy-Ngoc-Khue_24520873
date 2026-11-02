@@ -4,6 +4,7 @@ from pathlib import Path
 from src.engine.rule_loader import RuleLoader
 from src.engine.header_matcher import HeaderMatcher
 from src.engine.rule_parser import RuleParser
+from src.engine.repository import RuleRepository
 
 
 def test_load_file_skips_comments_and_blank_lines():
@@ -209,6 +210,68 @@ def test_rule_direction_matches_forward_and_reverse_events():
                     rule["header_fields"]["direction"] for rule in rules
                 ],
                 "matches": actual_matches,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_repository_index_returns_matching_protocol_and_header_candidates():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T06" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T06" / "output.json"
+
+    rules = RuleLoader().load_file(input_path, RuleParser().parse)
+    repository = RuleRepository()
+    repository.add_rules(rules)
+
+    events = {
+        "tcp_cidr_and_wildcard": {
+            "protocol": "TCP",
+            "src_ip": "10.1.2.3",
+            "src_port": 1500,
+            "dst_ip": "192.0.2.20",
+            "dst_port": 443,
+        },
+        "udp_wildcard": {
+            "protocol": "UDP",
+            "src_ip": "203.0.113.8",
+            "src_port": 53000,
+            "dst_ip": "192.0.2.53",
+            "dst_port": 53,
+        },
+        "udp_cidr_and_port_ranges": {
+            "protocol": "UDP",
+            "src_ip": "10.1.2.3",
+            "src_port": 1500,
+            "dst_ip": "192.0.2.20",
+            "dst_port": 5500,
+        },
+    }
+
+    actual_candidates = {
+        name: [
+            rule["rule_text"]
+            for rule in repository.get_candidates(event)
+        ]
+        for name, event in events.items()
+    }
+
+    assert actual_candidates == {
+        "tcp_cidr_and_wildcard": [
+            rules[0]["rule_text"],
+            rules[1]["rule_text"],
+        ],
+        "udp_wildcard": [rules[3]["rule_text"]],
+        "udp_cidr_and_port_ranges": [rules[4]["rule_text"]],
+    }
+
+    output_path.write_text(
+        json.dumps(
+            {
+                name: [rule["rule_text"] for rule in repository.get_candidates(event)]
+                for name, event in events.items()
             },
             indent=2,
         ),
