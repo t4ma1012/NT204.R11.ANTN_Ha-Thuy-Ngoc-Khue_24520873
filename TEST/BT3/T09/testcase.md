@@ -23,3 +23,8 @@ python -m pytest -q tests\test_rule_loader.py -k test_content_matching
 ## Kết quả thực tế
 
 Đạt: kiểm thử xác nhận `ADMIN` chỉ match rule có `nocase`; `Admin` match cả hai rule. Cả hai detection đều ghi pattern, field và trạng thái `nocase` trong `match_info`.
+- T09:
+![image](https://hackmd.io/_uploads/ByL1f0Hpfx.png)
+- Toàn bộ pytest: `39 passed`, 6 cảnh báo deprecation từ Scapy.
+
+![image](https://hackmd.io/_uploads/B1blzRr6zl.png)

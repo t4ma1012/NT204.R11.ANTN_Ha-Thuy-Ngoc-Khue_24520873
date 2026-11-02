@@ -1,0 +1,54 @@
+{
+  "match_events": [
+    [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Offset depth match\"; content:\"ALERT\"; offset:4; depth:6; sid:1000030; rev:1;)",
+        "match_info": [
+          {
+            "content": "ALERT",
+            "field": "payload",
+            "nocase": false,
+            "offset": 4,
+            "depth": 6
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Depth match\"; content:\"TOKEN\"; depth:5; sid:1000031; rev:1;)",
+        "match_info": [
+          {
+            "content": "TOKEN",
+            "field": "payload",
+            "nocase": false,
+            "depth": 5
+          }
+        ]
+      }
+    ]
+  ],
+  "no_match_events": [
+    [],
+    [],
+    []
+  ],
+  "invalid_rule_statuses": [
+    {
+      "status": "invalid",
+      "reason": "offset option must follow a content option"
+    },
+    {
+      "status": "invalid",
+      "reason": "offset option requires a non-negative integer"
+    },
+    {
+      "status": "invalid",
+      "reason": "depth option requires a positive integer"
+    },
+    {
+      "status": "invalid",
+      "reason": "content option requires a non-empty pattern"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+# The content occurs inside the region beginning at byte offset 4 and spanning 6 bytes.
+alert tcp any any -> any any (msg:"Offset depth match"; content:"ALERT"; offset:4; depth:6; sid:1000030; rev:1;)
+
+# Depth without offset limits the search region from its beginning.
+alert tcp any any -> any any (msg:"Depth match"; content:"TOKEN"; depth:5; sid:1000031; rev:1;)

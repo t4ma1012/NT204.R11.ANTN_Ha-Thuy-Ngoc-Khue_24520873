@@ -147,7 +147,12 @@ class RuleParser:
                     )
 
                 content_conditions.append(
-                    {"pattern": value, "nocase": False}
+                    {
+                        "pattern": value,
+                        "nocase": False,
+                        "offset": None,
+                        "depth": None,
+                    }
                 )
             elif keyword == "nocase":
                 if not content_conditions:
@@ -160,6 +165,50 @@ class RuleParser:
                         header_fields,
                     )
                 content_conditions[-1]["nocase"] = True
+            elif keyword in {"offset", "depth"}:
+                if not content_conditions:
+                    return self._result(
+                        rule_text,
+                        "invalid",
+                        f"{keyword} option must follow a content option",
+                        header,
+                        options.strip(),
+                        header_fields,
+                    )
+                if value is None or not value.isdecimal():
+                    requirement = (
+                        "a non-negative integer"
+                        if keyword == "offset"
+                        else "a positive integer"
+                    )
+                    return self._result(
+                        rule_text,
+                        "invalid",
+                        f"{keyword} option requires {requirement}",
+                        header,
+                        options.strip(),
+                        header_fields,
+                    )
+                number = int(value)
+                if keyword == "depth" and number == 0:
+                    return self._result(
+                        rule_text,
+                        "invalid",
+                        "depth option requires a positive integer",
+                        header,
+                        options.strip(),
+                        header_fields,
+                    )
+                if content_conditions[-1][keyword] is not None:
+                    return self._result(
+                        rule_text,
+                        "invalid",
+                        f"content cannot contain multiple {keyword} options",
+                        header,
+                        options.strip(),
+                        header_fields,
+                    )
+                content_conditions[-1][keyword] = number
 
         rule = {
             "status": "valid",
@@ -391,7 +440,14 @@ class RuleParser:
                 ):
                     return [], "content option requires a quoted pattern"
                 value = value[1:-1]
-            elif value and value.startswith('"') and value.endswith('"'):
+                if not value:
+                    return [], "content option requires a non-empty pattern"
+            elif (
+                keyword not in {"offset", "depth"}
+                and value
+                and value.startswith('"')
+                and value.endswith('"')
+            ):
                 value = value[1:-1]
 
             parsed_options.append((keyword, value))

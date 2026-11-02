@@ -543,10 +543,20 @@ def test_content_matching_respects_nocase_and_reports_matched_field():
     rules = RuleLoader().load_file(input_path, RuleParser().parse)
     assert all(rule["status"] == "valid" for rule in rules)
     assert rules[0]["content_conditions"] == [
-        {"pattern": "Admin", "nocase": False}
+        {
+            "pattern": "Admin",
+            "nocase": False,
+            "offset": None,
+            "depth": None,
+        }
     ]
     assert rules[1]["content_conditions"] == [
-        {"pattern": "Admin", "nocase": True}
+        {
+            "pattern": "Admin",
+            "nocase": True,
+            "offset": None,
+            "depth": None,
+        }
     ]
 
     repository = RuleRepository()
@@ -601,6 +611,117 @@ def test_content_matching_respects_nocase_and_reports_matched_field():
             {
                 "uppercase_application_data": uppercase_matches,
                 "mixed_case_application_data": mixed_case_matches,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_content_offset_depth_limits_matching_region():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T10" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T10" / "output.json"
+
+    parser = RuleParser()
+    rules = RuleLoader().load_file(input_path, parser.parse)
+    assert all(rule["status"] == "valid" for rule in rules)
+    assert rules[0]["content_conditions"] == [
+        {
+            "pattern": "ALERT",
+            "nocase": False,
+            "offset": 4,
+            "depth": 6,
+        }
+    ]
+    assert rules[1]["content_conditions"] == [
+        {
+            "pattern": "TOKEN",
+            "nocase": False,
+            "offset": None,
+            "depth": 5,
+        }
+    ]
+
+    repository = RuleRepository()
+    repository.add_rules(rules)
+    matcher = ContentMatcher()
+
+    def detection_event_generator(rule, event):
+        return {"rule_text": rule["rule_text"]}
+
+    evaluator = RuleEvaluationEngine(
+        repository,
+        matcher.matches,
+        detection_event_generator,
+    )
+    event_fields = {
+        "protocol": "TCP",
+        "src_ip": "10.0.0.1",
+        "src_port": 51000,
+        "dst_ip": "10.0.0.2",
+        "dst_port": 80,
+    }
+
+    match_events = [
+        {**event_fields, "payload": "xxxxALERT!!"},
+        {**event_fields, "payload": "TOKEN!"},
+    ]
+    no_match_events = [
+        {**event_fields, "payload": "xxxxxxALERT"},
+        {**event_fields, "payload": "xxxxxTOKEN"},
+        event_fields,
+    ]
+    matches = [evaluator.evaluate(event) for event in match_events]
+    no_matches = [evaluator.evaluate(event) for event in no_match_events]
+
+    assert [result[0]["rule_text"] for result in matches] == [
+        rules[0]["rule_text"],
+        rules[1]["rule_text"],
+    ]
+    assert no_matches == [[], [], []]
+    assert matches[0][0]["match_info"][0]["offset"] == 4
+    assert matches[0][0]["match_info"][0]["depth"] == 6
+    assert matches[1][0]["match_info"][0]["depth"] == 5
+
+    invalid_rules = [
+        'alert tcp any any -> any any (offset:1; sid:1;)',
+        'alert tcp any any -> any any (content:"X"; offset:-1; sid:2;)',
+        'alert tcp any any -> any any (content:"X"; depth:0; sid:3;)',
+        'alert tcp any any -> any any (content:""; sid:4;)',
+    ]
+    invalid_results = [parser.parse(rule) for rule in invalid_rules]
+    assert all(result["status"] == "invalid" for result in invalid_results)
+    assert matcher.matches(
+        {"content_conditions": [{"pattern": "X"}]},
+        event_fields,
+    ) == {"matched": False, "match_info": []}
+    assert matcher.matches(
+        {
+            "content_conditions": [
+                {
+                    "pattern": "X",
+                    "nocase": False,
+                    "offset": 2,
+                    "depth": 1,
+                }
+            ]
+        },
+        {"payload": "éX"},
+    )["matched"]
+
+    output_path.write_text(
+        json.dumps(
+            {
+                "match_events": matches,
+                "no_match_events": no_matches,
+                "invalid_rule_statuses": [
+                    {
+                        "status": result["status"],
+                        "reason": result["reason"],
+                    }
+                    for result in invalid_results
+                ],
             },
             indent=2,
         ),
