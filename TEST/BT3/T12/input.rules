@@ -1,0 +1,11 @@
+# Both TCP flags and data size must satisfy the rule.
+alert tcp any any -> any any (msg:"SYN payload threshold"; flags:S; dsize:>4; sid:1000032; rev:1;)
+
+# Exact data size.
+alert tcp any any -> any any (msg:"Exact payload size"; dsize:4; sid:1000033; rev:1;)
+
+# Inclusive data-size range.
+alert tcp any any -> any any (msg:"Payload size range"; dsize:2<>6; sid:1000034; rev:1;)
+
+# Dsize uses the event payload length and does not require TCP flags.
+alert udp any any -> any any (msg:"UDP payload size range"; dsize:2<>6; sid:1000035; rev:1;)

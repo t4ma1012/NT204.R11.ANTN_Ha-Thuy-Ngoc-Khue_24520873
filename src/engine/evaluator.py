@@ -1,6 +1,7 @@
 from typing import Callable, Dict, List, Optional
 
 from src.engine.flow_matcher import FlowMatcher
+from src.engine.packet_matcher import PacketMatcher
 from src.engine.repository import RuleRepository
 
 
@@ -18,6 +19,7 @@ class RuleEvaluationEngine:
         self._content_matcher = content_matcher
         self._detection_event_generator = detection_event_generator
         self._flow_matcher = FlowMatcher()
+        self._packet_matcher = PacketMatcher()
 
     def evaluate(
         self,
@@ -32,6 +34,8 @@ class RuleEvaluationEngine:
                 flow_conditions,
                 flow_context,
             ):
+                continue
+            if not self._packet_matcher.matches(rule, event):
                 continue
 
             content_result = self._content_matcher(rule, event)

@@ -5,6 +5,7 @@ from src.engine.rule_loader import RuleLoader
 from src.engine.header_matcher import HeaderMatcher
 from src.engine.content_matcher import ContentMatcher
 from src.engine.evaluator import RuleEvaluationEngine
+from src.engine.packet_matcher import PacketMatcher
 from src.engine.rule_parser import RuleParser
 from src.engine.repository import RuleRepository
 from src.flow.tracker import FlowTracker
@@ -194,6 +195,135 @@ def test_content_distance_within_relative_matching():
                 ],
                 "independent_relative_results": independent_relative_results,
                 "invalid_rule_statuses": [
+                    {
+                        "status": result["status"],
+                        "reason": result["reason"],
+                    }
+                    for result in invalid_results
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_tcp_flags_and_dsize_match_events_safely():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T12" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T12" / "output.json"
+
+    parser = RuleParser()
+    rules = RuleLoader().load_file(input_path, parser.parse)
+    assert all(rule["status"] == "valid" for rule in rules)
+    assert rules[0]["flags_condition"]["required"] == "S"
+    assert rules[0]["dsize_condition"] == {
+        "operator": ">",
+        "value": 4,
+    }
+
+    repository = RuleRepository()
+    repository.add_rules(rules)
+    matcher = ContentMatcher()
+
+    def detection_event_generator(rule, event):
+        return {"rule_text": rule["rule_text"]}
+
+    evaluator = RuleEvaluationEngine(
+        repository,
+        matcher.matches,
+        detection_event_generator,
+    )
+    event_fields = {
+        "protocol": "TCP",
+        "src_ip": "10.0.0.1",
+        "src_port": 51000,
+        "dst_ip": "10.0.0.2",
+        "dst_port": 80,
+    }
+    test_events = [
+        ("syn-size-5", {**event_fields, "flags": "S", "payload_length": 5}),
+        ("syn-size-4", {**event_fields, "flags": "S", "payload_length": 4}),
+        ("ack-size-5", {**event_fields, "flags": "A", "payload_length": 5}),
+        ("exact-size-4", {**event_fields, "flags": "A", "payload_length": 4}),
+        ("range-min", {**event_fields, "flags": "A", "payload_length": 2}),
+        ("range-max", {**event_fields, "flags": "A", "payload_length": 6}),
+        ("range-outside", {**event_fields, "flags": "A", "payload_length": 7}),
+        ("udp", {
+            **event_fields,
+            "protocol": "UDP",
+            "flags": "S",
+            "payload_length": 5,
+        }),
+        ("missing-flags", {**event_fields, "payload_length": 5}),
+        ("missing-length", {**event_fields, "flags": "S"}),
+        ("invalid-length", {
+            **event_fields,
+            "flags": "S",
+            "payload_length": "5",
+        }),
+    ]
+    results = {
+        name: evaluator.evaluate(event)
+        for name, event in test_events
+    }
+    packet_matcher = PacketMatcher()
+    assert not packet_matcher.matches(
+        rules[0],
+        {
+            "protocol": "UDP",
+            "flags": "S",
+            "payload_length": 5,
+        },
+    )
+    assert not packet_matcher.matches(
+        rules[0],
+        {"protocol": "TCP", "payload_length": 5},
+    )
+    assert not packet_matcher.matches(
+        rules[0],
+        {"protocol": "TCP", "flags": "S"},
+    )
+    sid_to_expected_names = {
+        "syn-size-5": {
+            rules[0]["rule_text"],
+            rules[2]["rule_text"],
+        },
+        "syn-size-4": {
+            rules[1]["rule_text"],
+            rules[2]["rule_text"],
+        },
+        "ack-size-5": {rules[2]["rule_text"]},
+        "exact-size-4": {rules[1]["rule_text"], rules[2]["rule_text"]},
+        "range-min": {rules[2]["rule_text"]},
+        "range-max": {rules[2]["rule_text"]},
+        "range-outside": set(),
+        "udp": {rules[3]["rule_text"]},
+        "missing-flags": {rules[2]["rule_text"]},
+        "missing-length": set(),
+        "invalid-length": set(),
+    }
+    for name, expected_rules in sid_to_expected_names.items():
+        assert {item["rule_text"] for item in results[name]} == expected_rules
+
+    invalid_rules = [
+        'alert tcp any any -> any any (flags:; sid:1;)',
+        'alert tcp any any -> any any (flags:X; sid:2;)',
+        'alert tcp any any -> any any (dsize:-1; sid:3;)',
+        'alert tcp any any -> any any (dsize:8<>2; sid:4;)',
+        'alert tcp any any -> any any (dsize:>; sid:5;)',
+    ]
+    invalid_results = [parser.parse(rule) for rule in invalid_rules]
+    assert all(result["status"] == "invalid" for result in invalid_results)
+
+    output_path.write_text(
+        json.dumps(
+            {
+                "event_results": {
+                    name: results[name]
+                    for name, _ in test_events
+                },
+                "invalid_rules": [
                     {
                         "status": result["status"],
                         "reason": result["reason"],

@@ -23,3 +23,11 @@ python -m pytest -q tests\test_rule_loader.py -k test_content_distance_within
 ## Kết quả thực tế
 
 Đạt: cả ba payload có `TAIL` trong vùng giới hạn tạo detection; payload có khoảng cách không đủ, vượt vùng hoặc sai thứ tự đều không match. Kiểm thử riêng `distance` và `within` cũng xác nhận từng cận dưới/cận trên, đồng thời xác nhận `offset`/`depth` giao với các ràng buộc quan hệ và giá trị sai bị phân loại `invalid`.
+- T11:
+
+![image](https://hackmd.io/_uploads/ryV340H6Mg.png)
+
+- Toàn bộ pytest: `41 passed`, 6 cảnh báo deprecation từ Scapy.
+
+![image](https://hackmd.io/_uploads/Bkf0NArafx.png)
+

@@ -133,6 +133,56 @@ class RuleParser:
                     header_fields,
                 )
 
+        flag_values = [
+            value for keyword, value in parsed_options if keyword == "flags"
+        ]
+        if len(flag_values) > 1:
+            return self._result(
+                rule_text,
+                "invalid",
+                "rule cannot contain multiple flags options",
+                header,
+                options.strip(),
+                header_fields,
+            )
+        flags_condition = None
+        if flag_values:
+            flags_condition, reason = self._parse_flags(flag_values[0])
+            if reason is not None:
+                return self._result(
+                    rule_text,
+                    "invalid",
+                    reason,
+                    header,
+                    options.strip(),
+                    header_fields,
+                )
+
+        dsize_values = [
+            value for keyword, value in parsed_options if keyword == "dsize"
+        ]
+        if len(dsize_values) > 1:
+            return self._result(
+                rule_text,
+                "invalid",
+                "rule cannot contain multiple dsize options",
+                header,
+                options.strip(),
+                header_fields,
+            )
+        dsize_condition = None
+        if dsize_values:
+            dsize_condition, reason = self._parse_dsize(dsize_values[0])
+            if reason is not None:
+                return self._result(
+                    rule_text,
+                    "invalid",
+                    reason,
+                    header,
+                    options.strip(),
+                    header_fields,
+                )
+
         content_conditions: List[Dict[str, object]] = []
         for keyword, value in parsed_options:
             if keyword == "content":
@@ -231,10 +281,80 @@ class RuleParser:
         }
         if flow_conditions is not None:
             rule["flow_conditions"] = flow_conditions
+        if flags_condition is not None:
+            rule["flags_condition"] = flags_condition
+        if dsize_condition is not None:
+            rule["dsize_condition"] = dsize_condition
         if content_conditions:
             rule["content_conditions"] = content_conditions
 
         return rule
+
+    @staticmethod
+    def _parse_flags(value: Optional[str]) -> Tuple[Optional[Dict[str, object]], Optional[str]]:
+        valid_flags = set("FSRPAU")
+        if not value:
+            return None, "flags option requires at least one TCP flag"
+
+        operator = "all"
+        flags_text = value
+        if flags_text[0] in {"!", "+"}:
+            operator = "none" if flags_text[0] == "!" else "all"
+            flags_text = flags_text[1:]
+        elif "*" in flags_text:
+            if flags_text.count("*") != 1 or not flags_text.endswith("*"):
+                return None, "flags option has an invalid wildcard modifier"
+            operator = "any"
+            flags_text = flags_text[:-1]
+
+        if flags_text == "0":
+            if operator != "all":
+                return None, "flags option cannot combine 0 with a modifier"
+            return {"required": "", "forbidden": "", "operator": "zero"}, None
+        if not flags_text or any(flag not in valid_flags for flag in flags_text):
+            return None, "flags option contains an unsupported TCP flag"
+        if len(set(flags_text)) != len(flags_text):
+            return None, "flags option contains duplicate TCP flags"
+
+        return {
+            "required": flags_text if operator == "all" else "",
+            "forbidden": flags_text if operator == "none" else "",
+            "any": flags_text if operator == "any" else "",
+            "operator": operator,
+        }, None
+
+    @staticmethod
+    def _parse_dsize(value: Optional[str]) -> Tuple[Optional[Dict[str, object]], Optional[str]]:
+        if not value:
+            return None, "dsize option requires a size condition"
+
+        if value.startswith(">") or value.startswith("<"):
+            operator = value[0]
+            operand = value[1:]
+            if not operand.isdecimal():
+                return None, "dsize comparison requires a non-negative integer"
+            return {"operator": operator, "value": int(operand)}, None
+
+        if "<>" in value:
+            parts = value.split("<>")
+            if (
+                len(parts) != 2
+                or not parts[0].isdecimal()
+                or not parts[1].isdecimal()
+            ):
+                return None, "dsize range must use non-negative min<>max values"
+            minimum, maximum = map(int, parts)
+            if minimum > maximum:
+                return None, "dsize range minimum cannot exceed maximum"
+            return {
+                "operator": "range",
+                "minimum": minimum,
+                "maximum": maximum,
+            }, None
+
+        if not value.isdecimal():
+            return None, "dsize requires an integer, comparison, or range"
+        return {"operator": "exact", "value": int(value)}, None
 
     def _parse_header(
         self,

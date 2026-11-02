@@ -1,0 +1,78 @@
+{
+  "event_results": {
+    "syn-size-5": [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"SYN payload threshold\"; flags:S; dsize:>4; sid:1000032; rev:1;)"
+      },
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Payload size range\"; dsize:2<>6; sid:1000034; rev:1;)"
+      }
+    ],
+    "syn-size-4": [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Exact payload size\"; dsize:4; sid:1000033; rev:1;)"
+      },
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Payload size range\"; dsize:2<>6; sid:1000034; rev:1;)"
+      }
+    ],
+    "ack-size-5": [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Payload size range\"; dsize:2<>6; sid:1000034; rev:1;)"
+      }
+    ],
+    "exact-size-4": [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Exact payload size\"; dsize:4; sid:1000033; rev:1;)"
+      },
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Payload size range\"; dsize:2<>6; sid:1000034; rev:1;)"
+      }
+    ],
+    "range-min": [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Payload size range\"; dsize:2<>6; sid:1000034; rev:1;)"
+      }
+    ],
+    "range-max": [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Payload size range\"; dsize:2<>6; sid:1000034; rev:1;)"
+      }
+    ],
+    "range-outside": [],
+    "udp": [
+      {
+        "rule_text": "alert udp any any -> any any (msg:\"UDP payload size range\"; dsize:2<>6; sid:1000035; rev:1;)"
+      }
+    ],
+    "missing-flags": [
+      {
+        "rule_text": "alert tcp any any -> any any (msg:\"Payload size range\"; dsize:2<>6; sid:1000034; rev:1;)"
+      }
+    ],
+    "missing-length": [],
+    "invalid-length": []
+  },
+  "invalid_rules": [
+    {
+      "status": "invalid",
+      "reason": "flags option requires at least one TCP flag"
+    },
+    {
+      "status": "invalid",
+      "reason": "flags option contains an unsupported TCP flag"
+    },
+    {
+      "status": "invalid",
+      "reason": "dsize requires an integer, comparison, or range"
+    },
+    {
+      "status": "invalid",
+      "reason": "dsize range minimum cannot exceed maximum"
+    },
+    {
+      "status": "invalid",
+      "reason": "dsize comparison requires a non-negative integer"
+    }
+  ]
+}
