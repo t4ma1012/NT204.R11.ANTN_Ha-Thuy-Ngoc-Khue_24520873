@@ -25,3 +25,5 @@ python -m pytest -q tests/test_rule_loader.py
 
 - Test T01: `1 passed`.
 - Toàn bộ pytest: `31 passed`, 6 cảnh báo deprecation từ Scapy.
+![image](https://hackmd.io/_uploads/HyLWjnH6zg.png)
+![image](https://hackmd.io/_uploads/SkBGihSafl.png)

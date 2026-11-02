@@ -1,0 +1,4 @@
+# The malformed rule is followed by a valid rule to verify loading continues.
+alert tcp any any -> any 80 (msg:"Malformed rule"; sid:1000003; rev:1;
+
+alert udp any any -> any 53 (msg:"Valid DNS rule"; sid:1000004; rev:1;)
