@@ -1,0 +1,36 @@
+{
+  "uppercase_application_data": [
+    {
+      "rule_text": "alert tcp any any -> any any (msg:\"Case insensitive\"; content:\"Admin\"; nocase; sid:1000023; rev:1;)",
+      "match_info": [
+        {
+          "content": "Admin",
+          "field": "application.decoded_body",
+          "nocase": true
+        }
+      ]
+    }
+  ],
+  "mixed_case_application_data": [
+    {
+      "rule_text": "alert tcp any any -> any any (msg:\"Case sensitive\"; content:\"Admin\"; sid:1000022; rev:1;)",
+      "match_info": [
+        {
+          "content": "Admin",
+          "field": "application.decoded_body",
+          "nocase": false
+        }
+      ]
+    },
+    {
+      "rule_text": "alert tcp any any -> any any (msg:\"Case insensitive\"; content:\"Admin\"; nocase; sid:1000023; rev:1;)",
+      "match_info": [
+        {
+          "content": "Admin",
+          "field": "application.decoded_body",
+          "nocase": true
+        }
+      ]
+    }
+  ]
+}

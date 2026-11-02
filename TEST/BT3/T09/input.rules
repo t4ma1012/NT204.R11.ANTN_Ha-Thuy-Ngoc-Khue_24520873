@@ -1,0 +1,5 @@
+# Case-sensitive content rule.
+alert tcp any any -> any any (msg:"Case sensitive"; content:"Admin"; sid:1000022; rev:1;)
+
+# nocase applies to the preceding content option.
+alert tcp any any -> any any (msg:"Case insensitive"; content:"Admin"; nocase; sid:1000023; rev:1;)

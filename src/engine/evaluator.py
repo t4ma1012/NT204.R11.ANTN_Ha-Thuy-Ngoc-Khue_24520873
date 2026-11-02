@@ -8,7 +8,7 @@ class RuleEvaluationEngine:
     def __init__(
         self,
         repository: RuleRepository,
-        content_matcher: Callable[[Dict[str, object], Dict[str, object]], bool],
+        content_matcher: Callable[[Dict[str, object], Dict[str, object]], object],
         detection_event_generator: Callable[
             [Dict[str, object], Dict[str, object]],
             Dict[str, object],
@@ -34,9 +34,18 @@ class RuleEvaluationEngine:
             ):
                 continue
 
-            if self._content_matcher(rule, event):
-                detection_events.append(
-                    self._detection_event_generator(rule, event)
-                )
+            content_result = self._content_matcher(rule, event)
+            if isinstance(content_result, dict):
+                matched = bool(content_result.get("matched"))
+                match_info = content_result.get("match_info", [])
+            else:
+                matched = bool(content_result)
+                match_info = []
+
+            if matched:
+                detection_event = self._detection_event_generator(rule, event)
+                if match_info:
+                    detection_event["match_info"] = match_info
+                detection_events.append(detection_event)
 
         return detection_events

@@ -133,6 +133,34 @@ class RuleParser:
                     header_fields,
                 )
 
+        content_conditions: List[Dict[str, object]] = []
+        for keyword, value in parsed_options:
+            if keyword == "content":
+                if value is None:
+                    return self._result(
+                        rule_text,
+                        "invalid",
+                        "content option requires a quoted pattern",
+                        header,
+                        options.strip(),
+                        header_fields,
+                    )
+
+                content_conditions.append(
+                    {"pattern": value, "nocase": False}
+                )
+            elif keyword == "nocase":
+                if not content_conditions:
+                    return self._result(
+                        rule_text,
+                        "invalid",
+                        "nocase option must follow a content option",
+                        header,
+                        options.strip(),
+                        header_fields,
+                    )
+                content_conditions[-1]["nocase"] = True
+
         rule = {
             "status": "valid",
             "rule_text": rule_text,
@@ -143,6 +171,8 @@ class RuleParser:
         }
         if flow_conditions is not None:
             rule["flow_conditions"] = flow_conditions
+        if content_conditions:
+            rule["content_conditions"] = content_conditions
 
         return rule
 
@@ -344,7 +374,7 @@ class RuleParser:
             if not option:
                 continue
 
-            keyword, separator, _ = option.partition(":")
+            keyword, separator, option_value = option.partition(":")
 
             if not separator and keyword != "nocase":
                 return [], f"malformed rule option '{keyword}'"
@@ -352,8 +382,16 @@ class RuleParser:
             if not keyword.isidentifier():
                 return [], f"malformed rule option name '{keyword}'"
 
-            value = option.partition(":")[2].strip() if separator else None
-            if value and value.startswith('"') and value.endswith('"'):
+            value = option_value.strip() if separator else None
+            if keyword == "content" and value is not None:
+                if (
+                    len(value) < 2
+                    or not value.startswith('"')
+                    or not value.endswith('"')
+                ):
+                    return [], "content option requires a quoted pattern"
+                value = value[1:-1]
+            elif value and value.startswith('"') and value.endswith('"'):
                 value = value[1:-1]
 
             parsed_options.append((keyword, value))

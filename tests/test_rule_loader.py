@@ -3,6 +3,7 @@ from pathlib import Path
 
 from src.engine.rule_loader import RuleLoader
 from src.engine.header_matcher import HeaderMatcher
+from src.engine.content_matcher import ContentMatcher
 from src.engine.evaluator import RuleEvaluationEngine
 from src.engine.rule_parser import RuleParser
 from src.engine.repository import RuleRepository
@@ -532,3 +533,76 @@ def test_flow_conditions_use_flow_tracker_context():
         "missing_context_matches": missing_context_detections,
     }
     output_path.write_text(json.dumps(actual, indent=2), encoding="utf-8")
+
+
+def test_content_matching_respects_nocase_and_reports_matched_field():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T09" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T09" / "output.json"
+
+    rules = RuleLoader().load_file(input_path, RuleParser().parse)
+    assert all(rule["status"] == "valid" for rule in rules)
+    assert rules[0]["content_conditions"] == [
+        {"pattern": "Admin", "nocase": False}
+    ]
+    assert rules[1]["content_conditions"] == [
+        {"pattern": "Admin", "nocase": True}
+    ]
+
+    repository = RuleRepository()
+    repository.add_rules(rules)
+    content_matcher = ContentMatcher()
+
+    def detection_event_generator(rule, event):
+        return {"rule_text": rule["rule_text"]}
+
+    evaluator = RuleEvaluationEngine(
+        repository,
+        content_matcher.matches,
+        detection_event_generator,
+    )
+    uppercase_event = {
+        "protocol": "TCP",
+        "src_ip": "10.0.0.1",
+        "src_port": 51000,
+        "dst_ip": "10.0.0.2",
+        "dst_port": 80,
+        "application": {"decoded_body": "ADMIN request"},
+    }
+    mixed_case_event = {
+        **uppercase_event,
+        "application": {"decoded_body": "Admin request"},
+    }
+
+    uppercase_matches = evaluator.evaluate(uppercase_event)
+    mixed_case_matches = evaluator.evaluate(mixed_case_event)
+
+    assert [event["rule_text"] for event in uppercase_matches] == [
+        rules[1]["rule_text"]
+    ]
+    assert [event["rule_text"] for event in mixed_case_matches] == [
+        rules[0]["rule_text"],
+        rules[1]["rule_text"],
+    ]
+    assert uppercase_matches[0]["match_info"] == [
+        {
+            "content": "Admin",
+            "field": "application.decoded_body",
+            "nocase": True,
+        }
+    ]
+    assert all(
+        event["match_info"][0]["field"] == "application.decoded_body"
+        for event in mixed_case_matches
+    )
+
+    output_path.write_text(
+        json.dumps(
+            {
+                "uppercase_application_data": uppercase_matches,
+                "mixed_case_application_data": mixed_case_matches,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
