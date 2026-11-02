@@ -97,6 +97,22 @@ class FlowTracker:
 
         direction = self._direction(flow, event)
 
+        if event["protocol"] == "TCP":
+            flags = set(event.get("flags", ""))
+            if "S" in flags and "A" not in flags and flow.client_endpoint is None:
+                flow.client_endpoint = self._endpoint(event)
+
+            if flow.client_endpoint is not None:
+                flow.direction = (
+                    "to_server"
+                    if self._endpoint(event) == flow.client_endpoint
+                    else "to_client"
+                )
+            else:
+                flow.direction = None
+        else:
+            flow.direction = None
+
         byte_count = int(
             event.get("payload_length", 0)
         )

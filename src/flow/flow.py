@@ -12,6 +12,8 @@ class Flow:
 
         self.endpoint_a = endpoint_a
         self.endpoint_b = endpoint_b
+        self.client_endpoint = None
+        self.direction = None
 
         self.start_time = start_time
         self.last_seen = start_time
@@ -58,5 +60,14 @@ class Flow:
             "ack_count": self.ack_count,
             "fin_count": self.fin_count,
             "rst_count": self.rst_count,
+            "tcp_state": self.tcp_state,
+        }
+
+    def to_context_dict(self):
+        return {
+            "flow_id": self.flow_id,
+            "protocol": self.protocol,
+            "client_endpoint": self.client_endpoint,
+            "direction": self.direction,
             "tcp_state": self.tcp_state,
         }

@@ -45,7 +45,7 @@ class RuleParser:
                 header_fields=header_fields,
             )
 
-        option_keywords, reason = self._extract_option_keywords(options)
+        parsed_options, reason = self._extract_options(options)
 
         if reason is not None:
             return self._result(
@@ -58,7 +58,7 @@ class RuleParser:
 
         unsupported = [
             keyword
-            for keyword in option_keywords
+            for keyword, _ in parsed_options
             if keyword not in self.SUPPORTED_OPTIONS
         ]
 
@@ -72,7 +72,68 @@ class RuleParser:
                 header_fields,
             )
 
-        return {
+        flow_values = [
+            value for keyword, value in parsed_options if keyword == "flow"
+        ]
+        if len(flow_values) > 1:
+            return self._result(
+                rule_text,
+                "invalid",
+                "rule cannot contain multiple flow options",
+                header,
+                options.strip(),
+                header_fields,
+            )
+
+        flow_conditions = None
+        if flow_values:
+            flow_value = flow_values[0]
+            if not flow_value:
+                return self._result(
+                    rule_text,
+                    "invalid",
+                    "flow option requires at least one condition",
+                    header,
+                    options.strip(),
+                    header_fields,
+                )
+
+            flow_conditions = [
+                condition.strip() for condition in flow_value.split(",")
+            ]
+            if any(not condition for condition in flow_conditions):
+                return self._result(
+                    rule_text,
+                    "invalid",
+                    "flow option contains an empty condition",
+                    header,
+                    options.strip(),
+                    header_fields,
+                )
+
+            unsupported_flow_conditions = [
+                condition
+                for condition in flow_conditions
+                if condition
+                not in {
+                    "to_server",
+                    "to_client",
+                    "established",
+                    "not_established",
+                }
+            ]
+            if unsupported_flow_conditions:
+                return self._result(
+                    rule_text,
+                    "unsupported",
+                    "unsupported flow condition "
+                    f"'{unsupported_flow_conditions[0]}'",
+                    header,
+                    options.strip(),
+                    header_fields,
+                )
+
+        rule = {
             "status": "valid",
             "rule_text": rule_text,
             "header": header,
@@ -80,6 +141,10 @@ class RuleParser:
             "options": options.strip(),
             "reason": None,
         }
+        if flow_conditions is not None:
+            rule["flow_conditions"] = flow_conditions
+
+        return rule
 
     def _parse_header(
         self,
@@ -241,10 +306,10 @@ class RuleParser:
         return "", "", "missing closing ')' for rule options"
 
     @staticmethod
-    def _extract_option_keywords(
+    def _extract_options(
         options: str,
-    ) -> Tuple[List[str], Optional[str]]:
-        keywords: List[str] = []
+    ) -> Tuple[List[Tuple[str, Optional[str]]], Optional[str]]:
+        parsed_options: List[Tuple[str, Optional[str]]] = []
         current = []
         quoted = False
         escaped = False
@@ -287,9 +352,13 @@ class RuleParser:
             if not keyword.isidentifier():
                 return [], f"malformed rule option name '{keyword}'"
 
-            keywords.append(keyword)
+            value = option.partition(":")[2].strip() if separator else None
+            if value and value.startswith('"') and value.endswith('"'):
+                value = value[1:-1]
 
-        return keywords, None
+            parsed_options.append((keyword, value))
+
+        return parsed_options, None
 
     @staticmethod
     def _result(

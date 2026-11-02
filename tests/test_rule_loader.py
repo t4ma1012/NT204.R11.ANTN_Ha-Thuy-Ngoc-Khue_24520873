@@ -6,6 +6,7 @@ from src.engine.header_matcher import HeaderMatcher
 from src.engine.evaluator import RuleEvaluationEngine
 from src.engine.rule_parser import RuleParser
 from src.engine.repository import RuleRepository
+from src.flow.tracker import FlowTracker
 
 
 def test_load_file_skips_comments_and_blank_lines():
@@ -377,3 +378,157 @@ def test_header_mismatch_is_filtered_before_content_matching():
         ),
         encoding="utf-8",
     )
+
+
+def test_flow_conditions_use_flow_tracker_context():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T08" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T08" / "output.json"
+
+    rules = RuleLoader().load_file(input_path, RuleParser().parse)
+    assert all(rule["status"] == "valid" for rule in rules)
+    assert rules[0]["flow_conditions"] == ["to_server", "established"]
+    assert rules[1]["flow_conditions"] == ["to_client", "established"]
+    assert rules[2]["flow_conditions"] == ["to_server", "not_established"]
+
+    repository = RuleRepository()
+    repository.add_rules(rules)
+    generated_events = []
+
+    def content_matcher(rule, event):
+        return "FLOW" in event.get("payload", "")
+
+    def detection_event_generator(rule, event):
+        detection = {"rule_text": rule["rule_text"]}
+        generated_events.append(detection)
+        return detection
+
+    evaluator = RuleEvaluationEngine(
+        repository,
+        content_matcher,
+        detection_event_generator,
+    )
+    tracker = FlowTracker()
+    handshake_events = [
+        {
+            "timestamp": 1,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.1",
+            "src_port": 51000,
+            "dst_ip": "10.0.0.2",
+            "dst_port": 80,
+            "flags": "S",
+            "payload_length": 0,
+        },
+        {
+            "timestamp": 2,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.2",
+            "src_port": 80,
+            "dst_ip": "10.0.0.1",
+            "dst_port": 51000,
+            "flags": "SA",
+            "payload_length": 0,
+        },
+        {
+            "timestamp": 3,
+            "protocol": "TCP",
+            "src_ip": "10.0.0.1",
+            "src_port": 51000,
+            "dst_ip": "10.0.0.2",
+            "dst_port": 80,
+            "flags": "A",
+            "payload_length": 0,
+        },
+    ]
+    for event in handshake_events:
+        tracker.process(event)
+
+    request_event = {
+        "timestamp": 4,
+        "protocol": "TCP",
+        "src_ip": "10.0.0.1",
+        "src_port": 51000,
+        "dst_ip": "10.0.0.2",
+        "dst_port": 80,
+        "payload": "FLOW request",
+    }
+    request_context = tracker.process(
+        {**request_event, "flags": "A", "payload_length": 12}
+    ).to_context_dict()
+    request_detections = evaluator.evaluate(request_event, request_context)
+
+    response_event = {
+        "timestamp": 5,
+        "protocol": "TCP",
+        "src_ip": "10.0.0.2",
+        "src_port": 80,
+        "dst_ip": "10.0.0.1",
+        "dst_port": 51000,
+        "payload": "FLOW response",
+    }
+    response_context = tracker.process(
+        {**response_event, "flags": "A", "payload_length": 13}
+    ).to_context_dict()
+    response_detections = evaluator.evaluate(response_event, response_context)
+
+    handshake_tracker = FlowTracker()
+    handshake_context = handshake_tracker.process(
+        handshake_events[0]
+    ).to_context_dict()
+    handshake_event = {
+        **request_event,
+        "timestamp": 6,
+        "payload": "FLOW handshake",
+    }
+    handshake_detections = evaluator.evaluate(
+        handshake_event,
+        handshake_context,
+    )
+    missing_context_detections = evaluator.evaluate(handshake_event)
+
+    assert request_context["tcp_state"] == "ESTABLISHED"
+    assert request_context["direction"] == "to_server"
+    assert [event["rule_text"] for event in request_detections] == [
+        rules[0]["rule_text"]
+    ]
+    assert response_context["tcp_state"] == "ESTABLISHED"
+    assert response_context["direction"] == "to_client"
+    assert [event["rule_text"] for event in response_detections] == [
+        rules[1]["rule_text"]
+    ]
+    assert handshake_context["tcp_state"] == "HANDSHAKE"
+    assert handshake_context["direction"] == "to_server"
+    assert [event["rule_text"] for event in handshake_detections] == [
+        rules[2]["rule_text"]
+    ]
+    assert missing_context_detections == []
+    assert generated_events == (
+        request_detections + response_detections + handshake_detections
+    )
+
+    actual = {
+        "established_request": {
+            "tcp_state": request_context["tcp_state"],
+            "direction": request_context["direction"],
+            "matched_rules": [
+                event["rule_text"] for event in request_detections
+            ],
+        },
+        "established_response": {
+            "tcp_state": response_context["tcp_state"],
+            "direction": response_context["direction"],
+            "matched_rules": [
+                event["rule_text"] for event in response_detections
+            ],
+        },
+        "not_established_request": {
+            "tcp_state": handshake_context["tcp_state"],
+            "direction": handshake_context["direction"],
+            "matched_rules": [
+                event["rule_text"] for event in handshake_detections
+            ],
+        },
+        "missing_context_matches": missing_context_detections,
+    }
+    output_path.write_text(json.dumps(actual, indent=2), encoding="utf-8")

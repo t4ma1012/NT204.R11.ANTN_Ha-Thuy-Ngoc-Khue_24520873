@@ -1,0 +1,24 @@
+{
+  "established_request": {
+    "tcp_state": "ESTABLISHED",
+    "direction": "to_server",
+    "matched_rules": [
+      "alert tcp any any -> any any (msg:\"Established request\"; flow:to_server,established; content:\"FLOW\"; sid:1000019; rev:1;)"
+    ]
+  },
+  "established_response": {
+    "tcp_state": "ESTABLISHED",
+    "direction": "to_client",
+    "matched_rules": [
+      "alert tcp any any -> any any (msg:\"Established response\"; flow:to_client,established; content:\"FLOW\"; sid:1000020; rev:1;)"
+    ]
+  },
+  "not_established_request": {
+    "tcp_state": "HANDSHAKE",
+    "direction": "to_server",
+    "matched_rules": [
+      "alert tcp any any -> any any (msg:\"Handshake request\"; flow:to_server,not_established; content:\"FLOW\"; sid:1000021; rev:1;)"
+    ]
+  },
+  "missing_context_matches": []
+}

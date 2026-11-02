@@ -1,0 +1,8 @@
+# Match client-to-server traffic only after the tracker marks the flow established.
+alert tcp any any -> any any (msg:"Established request"; flow:to_server,established; content:"FLOW"; sid:1000019; rev:1;)
+
+# Match established server-to-client traffic.
+alert tcp any any -> any any (msg:"Established response"; flow:to_client,established; content:"FLOW"; sid:1000020; rev:1;)
+
+# Match client-to-server traffic before establishment.
+alert tcp any any -> any any (msg:"Handshake request"; flow:to_server,not_established; content:"FLOW"; sid:1000021; rev:1;)
