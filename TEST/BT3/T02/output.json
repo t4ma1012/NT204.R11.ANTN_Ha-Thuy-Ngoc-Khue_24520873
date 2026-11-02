@@ -4,6 +4,7 @@
       "status": "invalid",
       "rule_text": "alert tcp any any -> any 80 (msg:\"Malformed rule\"; sid:1000003; rev:1;",
       "header": null,
+      "header_fields": null,
       "options": null,
       "reason": "missing closing ')' for rule options"
     },
@@ -11,6 +12,25 @@
       "status": "valid",
       "rule_text": "alert udp any any -> any 53 (msg:\"Valid DNS rule\"; sid:1000004; rev:1;)",
       "header": "alert udp any any -> any 53",
+      "header_fields": {
+        "action": "alert",
+        "protocol": "udp",
+        "src_ip": {
+          "type": "any"
+        },
+        "src_port": {
+          "type": "any"
+        },
+        "direction": "->",
+        "dst_ip": {
+          "type": "any"
+        },
+        "dst_port": {
+          "type": "single",
+          "start": 53,
+          "end": 53
+        }
+      },
       "options": "msg:\"Valid DNS rule\"; sid:1000004; rev:1;",
       "reason": null
     }

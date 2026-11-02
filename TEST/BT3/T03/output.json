@@ -4,6 +4,25 @@
       "status": "unsupported",
       "rule_text": "alert tcp any any -> any 80 (msg:\"Regex rule\"; pcre:\"/admin/i\"; sid:1000005; rev:1;)",
       "header": "alert tcp any any -> any 80",
+      "header_fields": {
+        "action": "alert",
+        "protocol": "tcp",
+        "src_ip": {
+          "type": "any"
+        },
+        "src_port": {
+          "type": "any"
+        },
+        "direction": "->",
+        "dst_ip": {
+          "type": "any"
+        },
+        "dst_port": {
+          "type": "single",
+          "start": 80,
+          "end": 80
+        }
+      },
       "options": "msg:\"Regex rule\"; pcre:\"/admin/i\"; sid:1000005; rev:1;",
       "reason": "unsupported keyword 'pcre'"
     },
@@ -11,6 +30,25 @@
       "status": "valid",
       "rule_text": "alert udp any any -> any 53 (msg:\"Supported DNS rule\"; sid:1000006; rev:1;)",
       "header": "alert udp any any -> any 53",
+      "header_fields": {
+        "action": "alert",
+        "protocol": "udp",
+        "src_ip": {
+          "type": "any"
+        },
+        "src_port": {
+          "type": "any"
+        },
+        "direction": "->",
+        "dst_ip": {
+          "type": "any"
+        },
+        "dst_port": {
+          "type": "single",
+          "start": 53,
+          "end": 53
+        }
+      },
       "options": "msg:\"Supported DNS rule\"; sid:1000006; rev:1;",
       "reason": null
     }

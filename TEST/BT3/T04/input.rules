@@ -1,0 +1,8 @@
+# Any address and port with a single destination IPv4 and port.
+alert tcp any any -> 192.0.2.10 443 (msg:"Single destination"; sid:1000007; rev:1;)
+
+# CIDR source with port range and any destination address.
+alert tcp 10.10.0.0/16 1024:65535 -> any 8000:8080 (msg:"Source range"; sid:1000008; rev:1;)
+
+# Single source address/port and CIDR destination with any destination port.
+alert tcp 198.51.100.25 22 -> 203.0.113.0/24 any (msg:"CIDR destination"; sid:1000009; rev:1;)

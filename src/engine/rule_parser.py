@@ -1,3 +1,4 @@
+import ipaddress
 from typing import Dict, List, Optional, Tuple
 
 
@@ -33,10 +34,27 @@ class RuleParser:
                 "rule must contain a header and a non-empty options block",
             )
 
+        header_fields, header_status, reason = self._parse_header(header)
+
+        if reason is not None:
+            return self._result(
+                rule_text,
+                header_status,
+                reason,
+                header,
+                header_fields=header_fields,
+            )
+
         option_keywords, reason = self._extract_option_keywords(options)
 
         if reason is not None:
-            return self._result(rule_text, "invalid", reason)
+            return self._result(
+                rule_text,
+                "invalid",
+                reason,
+                header,
+                header_fields=header_fields,
+            )
 
         unsupported = [
             keyword
@@ -51,15 +69,113 @@ class RuleParser:
                 f"unsupported keyword '{unsupported[0]}'",
                 header,
                 options.strip(),
+                header_fields,
             )
 
         return {
             "status": "valid",
             "rule_text": rule_text,
             "header": header,
+            "header_fields": header_fields,
             "options": options.strip(),
             "reason": None,
         }
+
+    def _parse_header(
+        self,
+        header: str,
+    ) -> Tuple[Optional[Dict[str, object]], str, Optional[str]]:
+        fields = header.split()
+
+        if len(fields) != 7:
+            return None, "invalid", "rule header must contain seven fields"
+
+        action, protocol, source_ip, source_port, direction, dest_ip, dest_port = (
+            fields
+        )
+
+        if action != "alert":
+            return None, "unsupported", f"unsupported rule action '{action}'"
+
+        protocol = protocol.lower()
+        if protocol not in {"tcp", "udp"}:
+            return (
+                None,
+                "unsupported",
+                f"unsupported protocol '{protocol}'",
+            )
+
+        source_address, reason = self._parse_address(source_ip)
+        if reason is not None:
+            return None, "invalid", f"invalid source IP: {reason}"
+
+        destination_address, reason = self._parse_address(dest_ip)
+        if reason is not None:
+            return None, "invalid", f"invalid destination IP: {reason}"
+
+        source_port_range, reason = self._parse_port(source_port)
+        if reason is not None:
+            return None, "invalid", f"invalid source port: {reason}"
+
+        destination_port_range, reason = self._parse_port(dest_port)
+        if reason is not None:
+            return None, "invalid", f"invalid destination port: {reason}"
+
+        if direction not in {"->", "<>"}:
+            return None, "invalid", f"invalid rule direction '{direction}'"
+
+        return {
+            "action": action,
+            "protocol": protocol,
+            "src_ip": source_address,
+            "src_port": source_port_range,
+            "direction": direction,
+            "dst_ip": destination_address,
+            "dst_port": destination_port_range,
+        }, "valid", None
+
+    @staticmethod
+    def _parse_address(
+        value: str,
+    ) -> Tuple[Optional[Dict[str, object]], Optional[str]]:
+        if value == "any":
+            return {"type": "any"}, None
+
+        try:
+            network = ipaddress.ip_network(value, strict=False)
+        except ValueError:
+            return None, f"'{value}' is not a valid IPv4 address or CIDR"
+
+        if not isinstance(network, ipaddress.IPv4Network):
+            return None, f"'{value}' is not an IPv4 address or CIDR"
+
+        return {"type": "network", "value": str(network)}, None
+
+    @staticmethod
+    def _parse_port(
+        value: str,
+    ) -> Tuple[Optional[Dict[str, object]], Optional[str]]:
+        if value == "any":
+            return {"type": "any"}, None
+
+        parts = value.split(":")
+        if len(parts) > 2 or any(not part.isdecimal() for part in parts):
+            return None, f"'{value}' is not a port or port range"
+
+        start = int(parts[0])
+        end = int(parts[-1])
+
+        if not 0 <= start <= 65535 or not 0 <= end <= 65535:
+            return None, f"'{value}' is outside the valid port range 0-65535"
+
+        if start > end:
+            return None, f"'{value}' has a descending port range"
+
+        return {
+            "type": "single" if len(parts) == 1 else "range",
+            "start": start,
+            "end": end,
+        }, None
 
     def _split_rule(
         self,
@@ -182,11 +298,13 @@ class RuleParser:
         reason: str,
         header: Optional[str] = None,
         options: Optional[str] = None,
+        header_fields: Optional[Dict[str, object]] = None,
     ) -> Dict[str, object]:
         return {
             "status": status,
             "rule_text": rule_text,
             "header": header,
+            "header_fields": header_fields,
             "options": options,
             "reason": reason,
         }

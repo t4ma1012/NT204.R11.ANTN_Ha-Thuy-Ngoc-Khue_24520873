@@ -1,0 +1,72 @@
+{
+  "status": [
+    "valid",
+    "valid",
+    "valid"
+  ],
+  "parsed_headers": [
+    {
+      "action": "alert",
+      "protocol": "tcp",
+      "src_ip": {
+        "type": "any"
+      },
+      "src_port": {
+        "type": "any"
+      },
+      "direction": "->",
+      "dst_ip": {
+        "type": "network",
+        "value": "192.0.2.10/32"
+      },
+      "dst_port": {
+        "type": "single",
+        "start": 443,
+        "end": 443
+      }
+    },
+    {
+      "action": "alert",
+      "protocol": "tcp",
+      "src_ip": {
+        "type": "network",
+        "value": "10.10.0.0/16"
+      },
+      "src_port": {
+        "type": "range",
+        "start": 1024,
+        "end": 65535
+      },
+      "direction": "->",
+      "dst_ip": {
+        "type": "any"
+      },
+      "dst_port": {
+        "type": "range",
+        "start": 8000,
+        "end": 8080
+      }
+    },
+    {
+      "action": "alert",
+      "protocol": "tcp",
+      "src_ip": {
+        "type": "network",
+        "value": "198.51.100.25/32"
+      },
+      "src_port": {
+        "type": "single",
+        "start": 22,
+        "end": 22
+      },
+      "direction": "->",
+      "dst_ip": {
+        "type": "network",
+        "value": "203.0.113.0/24"
+      },
+      "dst_port": {
+        "type": "any"
+      }
+    }
+  ]
+}
