@@ -1,0 +1,5 @@
+# Unidirectional rule: match source to destination only.
+alert tcp 10.0.0.1 12345 -> 10.0.0.2 80 (msg:"Forward only"; sid:1000010; rev:1;)
+
+# Bidirectional rule: match either orientation of the same endpoints.
+alert tcp 10.0.0.1 12345 <> 10.0.0.2 80 (msg:"Both directions"; sid:1000011; rev:1;)

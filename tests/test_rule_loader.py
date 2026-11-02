@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from src.engine.rule_loader import RuleLoader
+from src.engine.header_matcher import HeaderMatcher
 from src.engine.rule_parser import RuleParser
 
 
@@ -140,6 +141,74 @@ def test_tcp_header_parses_ip_and_port_fields():
             {
                 "status": [rule["status"] for rule in rules],
                 "parsed_headers": [rule["header_fields"] for rule in rules],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_rule_direction_matches_forward_and_reverse_events():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T05" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T05" / "output.json"
+
+    rules = RuleLoader().load_file(input_path, RuleParser().parse)
+    matcher = HeaderMatcher()
+    forward_event = {
+        "protocol": "tcp",
+        "src_ip": "10.0.0.1",
+        "src_port": 12345,
+        "dst_ip": "10.0.0.2",
+        "dst_port": 80,
+    }
+    reverse_event = {
+        "protocol": "tcp",
+        "src_ip": "10.0.0.2",
+        "src_port": 80,
+        "dst_ip": "10.0.0.1",
+        "dst_port": 12345,
+    }
+
+    assert len(rules) == 2
+    assert all(rule["status"] == "valid" for rule in rules)
+    unidirectional, bidirectional = rules
+    assert unidirectional["header_fields"]["direction"] == "->"
+    assert bidirectional["header_fields"]["direction"] == "<>"
+
+    actual_matches = {
+        "unidirectional_forward": matcher.matches(
+            unidirectional["header_fields"],
+            forward_event,
+        ),
+        "unidirectional_reverse": matcher.matches(
+            unidirectional["header_fields"],
+            reverse_event,
+        ),
+        "bidirectional_forward": matcher.matches(
+            bidirectional["header_fields"],
+            forward_event,
+        ),
+        "bidirectional_reverse": matcher.matches(
+            bidirectional["header_fields"],
+            reverse_event,
+        ),
+    }
+
+    assert actual_matches == {
+        "unidirectional_forward": True,
+        "unidirectional_reverse": False,
+        "bidirectional_forward": True,
+        "bidirectional_reverse": True,
+    }
+
+    output_path.write_text(
+        json.dumps(
+            {
+                "directions": [
+                    rule["header_fields"]["direction"] for rule in rules
+                ],
+                "matches": actual_matches,
             },
             indent=2,
         ),

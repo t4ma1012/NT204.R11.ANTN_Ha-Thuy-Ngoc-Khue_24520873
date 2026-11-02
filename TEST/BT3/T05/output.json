@@ -1,0 +1,12 @@
+{
+  "directions": [
+    "->",
+    "<>"
+  ],
+  "matches": {
+    "unidirectional_forward": true,
+    "unidirectional_reverse": false,
+    "bidirectional_forward": true,
+    "bidirectional_reverse": true
+  }
+}
