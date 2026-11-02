@@ -1,0 +1,15 @@
+{
+  "protocol": "HTTP",
+  "application": {
+    "type": "request",
+    "method": "GET",
+    "path": "/search?q=%27%20OR%201%3D1",
+    "version": "HTTP/1.1",
+    "headers": {},
+    "body": "",
+    "raw_path": "/search?q=%27%20OR%201%3D1",
+    "decoded_path": "/search?q=' OR 1=1",
+    "raw_body": "",
+    "decoded_body": ""
+  }
+}

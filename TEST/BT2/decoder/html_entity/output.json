@@ -1,0 +1,15 @@
+{
+  "protocol": "HTTP",
+  "application": {
+    "type": "request",
+    "method": "POST",
+    "path": "/comment",
+    "version": "HTTP/1.1",
+    "headers": {},
+    "body": "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;",
+    "raw_path": "/comment",
+    "decoded_path": "/comment",
+    "raw_body": "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;",
+    "decoded_body": "<script>alert(\"x\")</script>"
+  }
+}

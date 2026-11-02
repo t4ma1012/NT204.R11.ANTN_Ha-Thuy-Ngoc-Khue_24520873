@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-09-27T06:21:00+00:00",
+  "protocol": "HTTP",
+  "src_ip": "192.168.001.001",
+  "dst_ip": "8.8.8.8",
+  "application": {
+    "path": "/login",
+    "headers": {
+      "host": "example.com",
+      "content-type": "text/html"
+    }
+  },
+  "preprocess_status": "valid",
+  "processing_action": "normalized"
+}

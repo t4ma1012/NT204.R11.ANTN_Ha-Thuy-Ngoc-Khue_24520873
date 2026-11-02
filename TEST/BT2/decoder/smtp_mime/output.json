@@ -1,0 +1,28 @@
+{
+  "base64": {
+    "protocol": "SMTP",
+    "application": {
+      "type": "data",
+      "headers": {
+        "Content-Transfer-Encoding": "base64"
+      },
+      "body": "SGVsbG8gV29ybGQh",
+      "raw_body": "SGVsbG8gV29ybGQh",
+      "decoded_body": "Hello World!",
+      "decode_status": "success"
+    }
+  },
+  "quoted_printable": {
+    "protocol": "SMTP",
+    "application": {
+      "type": "data",
+      "headers": {
+        "Content-Transfer-Encoding": "quoted-printable"
+      },
+      "body": "Hello=20World=21",
+      "raw_body": "Hello=20World=21",
+      "decoded_body": "Hello World!",
+      "decode_status": "success"
+    }
+  }
+}

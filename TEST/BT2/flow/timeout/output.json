@@ -1,0 +1,33 @@
+{
+  "expired": [
+    {
+      "flow_id": "UDP-10.0.0.1:50000-8.8.8.8:53",
+      "protocol": "UDP",
+      "endpoints": [
+        [
+          "10.0.0.1",
+          50000
+        ],
+        [
+          "8.8.8.8",
+          53
+        ]
+      ],
+      "start_time": 1,
+      "last_seen": 1,
+      "duration": 0,
+      "packet_count": 1,
+      "byte_count": 20,
+      "forward_packets": 1,
+      "backward_packets": 0,
+      "forward_bytes": 20,
+      "backward_bytes": 0,
+      "syn_count": 0,
+      "ack_count": 0,
+      "fin_count": 0,
+      "rst_count": 0,
+      "tcp_state": null
+    }
+  ],
+  "active_flows": []
+}
