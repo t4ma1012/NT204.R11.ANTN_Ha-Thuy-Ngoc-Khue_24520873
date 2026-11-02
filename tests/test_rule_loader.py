@@ -4,6 +4,7 @@ from pathlib import Path
 from src.engine.rule_loader import RuleLoader
 from src.engine.header_matcher import HeaderMatcher
 from src.engine.content_matcher import ContentMatcher
+from src.engine.detection_event_generator import DetectionEventGenerator
 from src.engine.evaluator import RuleEvaluationEngine
 from src.engine.packet_matcher import PacketMatcher
 from src.engine.rule_parser import RuleParser
@@ -391,6 +392,127 @@ def test_multiple_rules_matching_single_event():
                 "candidate_rule_count": len(repository.get_candidates(event)),
                 "detection_count": len(detections),
                 "detections": detections,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_detection_event_generation_uses_rule_event_and_flow_data():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T14" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T14" / "output.json"
+
+    rules = RuleLoader().load_file(input_path, RuleParser().parse)
+    assert len(rules) == 3
+    assert all(rule["status"] == "valid" for rule in rules)
+    assert rules[0]["metadata"] == {
+        "sid": 1000050,
+        "rev": 2,
+        "msg": "Traversal content detected",
+        "priority": 1,
+        "classtype": "web-application-attack",
+    }
+    assert rules[2]["metadata"] == {
+        "sid": 1000052,
+        "rev": 1,
+        "msg": "Basic event",
+    }
+
+    repository = RuleRepository()
+    repository.add_rules(rules)
+    class RecordingDetectionEventGenerator(DetectionEventGenerator):
+        def __init__(self):
+            self.generated = []
+
+        def generate(self, rule, event, flow_context=None, match_info=None):
+            self.generated.append(rule["rule_text"])
+            return super().generate(rule, event, flow_context, match_info)
+
+    detection_event_generator = RecordingDetectionEventGenerator()
+    evaluator = RuleEvaluationEngine(
+        repository,
+        ContentMatcher().matches,
+        detection_event_generator,
+    )
+    event = {
+        "timestamp": "2026-11-02T09:00:00Z",
+        "protocol": "TCP",
+        "src_ip": "10.0.0.5",
+        "src_port": 52133,
+        "dst_ip": "192.168.1.20",
+        "dst_port": 80,
+        "application_protocol": "HTTP",
+        "payload": "GET /../../etc/passwd HTTP/1.1",
+    }
+    flow_tracker = FlowTracker()
+    flow_context = flow_tracker.process(
+        {
+            **event,
+            "timestamp": 1,
+            "flags": "S",
+            "payload_length": 0,
+        }
+    ).to_context_dict()
+
+    detections = evaluator.evaluate(event, flow_context)
+    assert len(detections) == 1
+    assert detection_event_generator.generated == [rules[0]["rule_text"]]
+    detection = detections[0]
+    assert detection == {
+        "timestamp": event["timestamp"],
+        "sid": 1000050,
+        "rev": 2,
+        "msg": "Traversal content detected",
+        "src_ip": event["src_ip"],
+        "src_port": event["src_port"],
+        "dst_ip": event["dst_ip"],
+        "dst_port": event["dst_port"],
+        "protocol": "TCP",
+        "application_protocol": "HTTP",
+        "flow_id": flow_context["flow_id"],
+        "match_info": [
+            {
+                "content": "../",
+                "field": "payload",
+                "nocase": False,
+            }
+        ],
+        "priority": 1,
+        "classtype": "web-application-attack",
+    }
+    non_matching_event = {**event, "payload": "clean request"}
+    assert evaluator.evaluate(non_matching_event, flow_context) == []
+    assert detection_event_generator.generated == [rules[0]["rule_text"]]
+
+    partial_event = {
+        **event,
+        "payload": "ordinary request",
+    }
+    partial_event.pop("application_protocol")
+    partial_detection = evaluator.evaluate(partial_event)[0]
+    assert detection_event_generator.generated == [
+        rules[0]["rule_text"],
+        rules[2]["rule_text"],
+    ]
+    assert partial_detection["sid"] == 1000052
+    assert partial_detection["application_protocol"] is None
+    assert partial_detection["flow_id"] is None
+    assert "priority" not in partial_detection
+    assert "classtype" not in partial_detection
+    assert evaluator.evaluate(
+        non_matching_event,
+        flow_context,
+    ) == []
+
+    output_path.write_text(
+        json.dumps(
+            {
+                "matching_event": detections,
+                "non_matching_event": [],
+                "partial_context_event": [partial_detection],
+                "flow_context": flow_context,
             },
             indent=2,
         ),

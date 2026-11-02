@@ -1,0 +1,59 @@
+{
+  "matching_event": [
+    {
+      "timestamp": "2026-11-02T09:00:00Z",
+      "sid": 1000050,
+      "rev": 2,
+      "msg": "Traversal content detected",
+      "src_ip": "10.0.0.5",
+      "src_port": 52133,
+      "dst_ip": "192.168.1.20",
+      "dst_port": 80,
+      "protocol": "TCP",
+      "application_protocol": "HTTP",
+      "flow_id": "TCP-10.0.0.5:52133-192.168.1.20:80",
+      "match_info": [
+        {
+          "content": "../",
+          "field": "payload",
+          "nocase": false
+        }
+      ],
+      "priority": 1,
+      "classtype": "web-application-attack"
+    }
+  ],
+  "non_matching_event": [],
+  "partial_context_event": [
+    {
+      "timestamp": "2026-11-02T09:00:00Z",
+      "sid": 1000052,
+      "rev": 1,
+      "msg": "Basic event",
+      "src_ip": "10.0.0.5",
+      "src_port": 52133,
+      "dst_ip": "192.168.1.20",
+      "dst_port": 80,
+      "protocol": "TCP",
+      "application_protocol": null,
+      "flow_id": null,
+      "match_info": [
+        {
+          "content": "ordinary",
+          "field": "payload",
+          "nocase": false
+        }
+      ]
+    }
+  ],
+  "flow_context": {
+    "flow_id": "TCP-10.0.0.5:52133-192.168.1.20:80",
+    "protocol": "TCP",
+    "client_endpoint": [
+      "10.0.0.5",
+      52133
+    ],
+    "direction": "to_server",
+    "tcp_state": "HANDSHAKE"
+  }
+}

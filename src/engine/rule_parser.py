@@ -183,6 +183,49 @@ class RuleParser:
                     header_fields,
                 )
 
+        rule_metadata: Dict[str, object] = {}
+        for keyword in ("sid", "rev", "msg", "priority", "classtype"):
+            values = [
+                value
+                for option_name, value in parsed_options
+                if option_name == keyword
+            ]
+            if len(values) > 1:
+                return self._result(
+                    rule_text,
+                    "invalid",
+                    f"rule cannot contain multiple {keyword} options",
+                    header,
+                    options.strip(),
+                    header_fields,
+                )
+            if not values:
+                continue
+
+            value = values[0]
+            if value is None:
+                return self._result(
+                    rule_text,
+                    "invalid",
+                    f"{keyword} option requires a value",
+                    header,
+                    options.strip(),
+                    header_fields,
+                )
+            if keyword in {"sid", "rev", "priority"}:
+                if not value.isdecimal():
+                    return self._result(
+                        rule_text,
+                        "invalid",
+                        f"{keyword} option requires a non-negative integer",
+                        header,
+                        options.strip(),
+                        header_fields,
+                    )
+                rule_metadata[keyword] = int(value)
+            else:
+                rule_metadata[keyword] = value
+
         content_conditions: List[Dict[str, object]] = []
         for keyword, value in parsed_options:
             if keyword == "content":
@@ -285,6 +328,8 @@ class RuleParser:
             rule["flags_condition"] = flags_condition
         if dsize_condition is not None:
             rule["dsize_condition"] = dsize_condition
+        if rule_metadata:
+            rule["metadata"] = rule_metadata
         if content_conditions:
             rule["content_conditions"] = content_conditions
 

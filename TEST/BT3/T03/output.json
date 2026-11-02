@@ -50,7 +50,12 @@
         }
       },
       "options": "msg:\"Supported DNS rule\"; sid:1000006; rev:1;",
-      "reason": null
+      "reason": null,
+      "metadata": {
+        "sid": 1000006,
+        "rev": 1,
+        "msg": "Supported DNS rule"
+      }
     }
   ]
 }

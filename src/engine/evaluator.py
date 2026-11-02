@@ -1,5 +1,6 @@
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Union
 
+from src.engine.detection_event_generator import DetectionEventGenerator
 from src.engine.flow_matcher import FlowMatcher
 from src.engine.packet_matcher import PacketMatcher
 from src.engine.repository import RuleRepository
@@ -10,9 +11,12 @@ class RuleEvaluationEngine:
         self,
         repository: RuleRepository,
         content_matcher: Callable[[Dict[str, object], Dict[str, object]], object],
-        detection_event_generator: Callable[
-            [Dict[str, object], Dict[str, object]],
-            Dict[str, object],
+        detection_event_generator: Union[
+            Callable[
+                [Dict[str, object], Dict[str, object]],
+                Dict[str, object],
+            ],
+            DetectionEventGenerator,
         ],
     ) -> None:
         self._repository = repository
@@ -47,9 +51,22 @@ class RuleEvaluationEngine:
                 match_info = []
 
             if matched:
-                detection_event = self._detection_event_generator(rule, event)
-                if match_info:
-                    detection_event["match_info"] = match_info
+                generator_method = getattr(
+                    self._detection_event_generator,
+                    "generate",
+                    None,
+                )
+                if callable(generator_method):
+                    detection_event = generator_method(
+                        rule,
+                        event,
+                        flow_context,
+                        match_info,
+                    )
+                else:
+                    detection_event = self._detection_event_generator(rule, event)
+                    if match_info:
+                        detection_event["match_info"] = match_info
                 detection_events.append(detection_event)
 
         return detection_events

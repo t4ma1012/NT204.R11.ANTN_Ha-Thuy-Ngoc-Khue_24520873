@@ -1,0 +1,8 @@
+# This rule matches the normalized request and carries optional metadata.
+alert tcp any any -> any 80 (msg:"Traversal content detected"; content:"../"; sid:1000050; rev:2; priority:1; classtype:web-application-attack;)
+
+# This rule is a non-matching control and must not generate a detection.
+alert tcp any any -> any 80 (msg:"Control content"; content:"NOT-PRESENT"; sid:1000051; rev:1;)
+
+# Optional metadata and contextual values must not be invented when absent.
+alert tcp any any -> any 80 (msg:"Basic event"; content:"ordinary"; sid:1000052; rev:1;)

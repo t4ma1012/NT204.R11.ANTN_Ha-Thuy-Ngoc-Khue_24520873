@@ -32,7 +32,12 @@
         }
       },
       "options": "msg:\"Valid DNS rule\"; sid:1000004; rev:1;",
-      "reason": null
+      "reason": null,
+      "metadata": {
+        "sid": 1000004,
+        "rev": 1,
+        "msg": "Valid DNS rule"
+      }
     }
   ]
 }
