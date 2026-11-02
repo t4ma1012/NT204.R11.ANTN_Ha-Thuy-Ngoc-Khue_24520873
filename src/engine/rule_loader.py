@@ -34,12 +34,13 @@ class RuleLoader:
                         "reason": str(error),
                     }
 
-                if (
-                    isinstance(parsed_rule, dict)
-                    and parsed_rule.get("status") == "invalid"
-                ):
+                if isinstance(parsed_rule, dict) and parsed_rule.get(
+                    "status"
+                ) in {"invalid", "unsupported"}:
+                    status = parsed_rule["status"]
                     logger.warning(
-                        "Invalid rule at %s:%d: %s",
+                        "%s rule at %s:%d: %s",
+                        str(status).capitalize(),
                         path,
                         line_number,
                         parsed_rule.get("reason", "invalid rule syntax"),

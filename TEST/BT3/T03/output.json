@@ -1,0 +1,18 @@
+{
+  "rules": [
+    {
+      "status": "unsupported",
+      "rule_text": "alert tcp any any -> any 80 (msg:\"Regex rule\"; pcre:\"/admin/i\"; sid:1000005; rev:1;)",
+      "header": "alert tcp any any -> any 80",
+      "options": "msg:\"Regex rule\"; pcre:\"/admin/i\"; sid:1000005; rev:1;",
+      "reason": "unsupported keyword 'pcre'"
+    },
+    {
+      "status": "valid",
+      "rule_text": "alert udp any any -> any 53 (msg:\"Supported DNS rule\"; sid:1000006; rev:1;)",
+      "header": "alert udp any any -> any 53",
+      "options": "msg:\"Supported DNS rule\"; sid:1000006; rev:1;",
+      "reason": null
+    }
+  ]
+}

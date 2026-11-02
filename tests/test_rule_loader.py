@@ -55,3 +55,23 @@ def test_syntax_invalid_rule_does_not_stop_loading():
         json.dumps({"rules": rules}, indent=2),
         encoding="utf-8",
     )
+
+
+def test_unsupported_keyword_does_not_stop_loading():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T03" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T03" / "output.json"
+
+    rules = RuleLoader().load_file(input_path, RuleParser().parse)
+
+    assert len(rules) == 2
+    assert rules[0]["status"] == "unsupported"
+    assert rules[0]["reason"] == "unsupported keyword 'pcre'"
+    assert rules[0]["header"] == "alert tcp any any -> any 80"
+    assert rules[1]["status"] == "valid"
+    assert rules[1]["header"] == "alert udp any any -> any 53"
+
+    output_path.write_text(
+        json.dumps({"rules": rules}, indent=2),
+        encoding="utf-8",
+    )

@@ -1,0 +1,5 @@
+# PCRE is outside the Snort keyword subset required for this assignment.
+alert tcp any any -> any 80 (msg:"Regex rule"; pcre:"/admin/i"; sid:1000005; rev:1;)
+
+# A supported rule after the unsupported rule must still be parsed.
+alert udp any any -> any 53 (msg:"Supported DNS rule"; sid:1000006; rev:1;)

@@ -1,7 +1,24 @@
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class RuleParser:
+    SUPPORTED_OPTIONS = {
+        "classtype",
+        "content",
+        "depth",
+        "distance",
+        "dsize",
+        "flags",
+        "flow",
+        "msg",
+        "nocase",
+        "offset",
+        "priority",
+        "rev",
+        "sid",
+        "within",
+    }
+
     def parse(self, rule_text: str) -> Dict[str, object]:
         rule_text = rule_text.strip()
         header, options, reason = self._split_rule(rule_text)
@@ -14,6 +31,26 @@ class RuleParser:
                 rule_text,
                 "invalid",
                 "rule must contain a header and a non-empty options block",
+            )
+
+        option_keywords, reason = self._extract_option_keywords(options)
+
+        if reason is not None:
+            return self._result(rule_text, "invalid", reason)
+
+        unsupported = [
+            keyword
+            for keyword in option_keywords
+            if keyword not in self.SUPPORTED_OPTIONS
+        ]
+
+        if unsupported:
+            return self._result(
+                rule_text,
+                "unsupported",
+                f"unsupported keyword '{unsupported[0]}'",
+                header,
+                options.strip(),
             )
 
         return {
@@ -88,15 +125,68 @@ class RuleParser:
         return "", "", "missing closing ')' for rule options"
 
     @staticmethod
+    def _extract_option_keywords(
+        options: str,
+    ) -> Tuple[List[str], Optional[str]]:
+        keywords: List[str] = []
+        current = []
+        quoted = False
+        escaped = False
+        option_parts = []
+
+        for character in options:
+            if escaped:
+                current.append(character)
+                escaped = False
+                continue
+
+            if quoted and character == "\\":
+                current.append(character)
+                escaped = True
+                continue
+
+            if character == '"':
+                quoted = not quoted
+                current.append(character)
+            elif character == ";" and not quoted:
+                option_parts.append("".join(current).strip())
+                current = []
+            else:
+                current.append(character)
+
+        if quoted:
+            return [], "unterminated quoted string in rule options"
+
+        option_parts.append("".join(current).strip())
+
+        for option in option_parts:
+            if not option:
+                continue
+
+            keyword, separator, _ = option.partition(":")
+
+            if not separator and keyword != "nocase":
+                return [], f"malformed rule option '{keyword}'"
+
+            if not keyword.isidentifier():
+                return [], f"malformed rule option name '{keyword}'"
+
+            keywords.append(keyword)
+
+        return keywords, None
+
+    @staticmethod
     def _result(
         rule_text: str,
         status: str,
         reason: str,
+        header: Optional[str] = None,
+        options: Optional[str] = None,
     ) -> Dict[str, object]:
         return {
             "status": status,
             "rule_text": rule_text,
-            "header": None,
-            "options": None,
+            "header": header,
+            "options": options,
             "reason": reason,
         }
