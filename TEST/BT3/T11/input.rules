@@ -1,0 +1,2 @@
+# The second content must start at least 2 bytes after HEAD and fit within 8 bytes of its end.
+alert tcp any any -> any any (msg:"Relative content bounds"; content:"HEAD"; content:"TAIL"; distance:2; within:8; offset:6; depth:6; sid:1000031; rev:1;)

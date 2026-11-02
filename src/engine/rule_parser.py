@@ -152,6 +152,8 @@ class RuleParser:
                         "nocase": False,
                         "offset": None,
                         "depth": None,
+                        "distance": None,
+                        "within": None,
                     }
                 )
             elif keyword == "nocase":
@@ -165,7 +167,7 @@ class RuleParser:
                         header_fields,
                     )
                 content_conditions[-1]["nocase"] = True
-            elif keyword in {"offset", "depth"}:
+            elif keyword in {"offset", "depth", "distance", "within"}:
                 if not content_conditions:
                     return self._result(
                         rule_text,
@@ -175,11 +177,20 @@ class RuleParser:
                         options.strip(),
                         header_fields,
                     )
+                if keyword in {"distance", "within"} and len(content_conditions) < 2:
+                    return self._result(
+                        rule_text,
+                        "invalid",
+                        f"{keyword} option requires a preceding content option",
+                        header,
+                        options.strip(),
+                        header_fields,
+                    )
                 if value is None or not value.isdecimal():
                     requirement = (
-                        "a non-negative integer"
-                        if keyword == "offset"
-                        else "a positive integer"
+                        "a positive integer"
+                        if keyword in {"depth", "within"}
+                        else "a non-negative integer"
                     )
                     return self._result(
                         rule_text,
@@ -190,11 +201,11 @@ class RuleParser:
                         header_fields,
                     )
                 number = int(value)
-                if keyword == "depth" and number == 0:
+                if keyword in {"depth", "within"} and number == 0:
                     return self._result(
                         rule_text,
                         "invalid",
-                        "depth option requires a positive integer",
+                        f"{keyword} option requires a positive integer",
                         header,
                         options.strip(),
                         header_fields,
@@ -443,7 +454,7 @@ class RuleParser:
                 if not value:
                     return [], "content option requires a non-empty pattern"
             elif (
-                keyword not in {"offset", "depth"}
+                keyword not in {"offset", "depth", "distance", "within"}
                 and value
                 and value.startswith('"')
                 and value.endswith('"')

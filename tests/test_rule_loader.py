@@ -40,6 +40,173 @@ def test_load_file_skips_comments_and_blank_lines():
     )
 
 
+def test_content_distance_within_relative_matching():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T11" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T11" / "output.json"
+
+    parser = RuleParser()
+    rules = RuleLoader().load_file(input_path, parser.parse)
+    assert len(rules) == 1
+    assert rules[0]["status"] == "valid"
+    assert rules[0]["content_conditions"] == [
+        {
+            "pattern": "HEAD",
+            "nocase": False,
+            "offset": None,
+            "depth": None,
+            "distance": None,
+            "within": None,
+        },
+        {
+            "pattern": "TAIL",
+            "nocase": False,
+            "offset": 6,
+            "depth": 6,
+            "distance": 2,
+            "within": 8,
+        },
+    ]
+
+    repository = RuleRepository()
+    repository.add_rules(rules)
+    matcher = ContentMatcher()
+
+    def detection_event_generator(rule, event):
+        return {"rule_text": rule["rule_text"]}
+
+    evaluator = RuleEvaluationEngine(
+        repository,
+        matcher.matches,
+        detection_event_generator,
+    )
+    event_fields = {
+        "protocol": "TCP",
+        "src_ip": "10.0.0.1",
+        "src_port": 51000,
+        "dst_ip": "10.0.0.2",
+        "dst_port": 80,
+    }
+
+    match_payloads = [
+        "HEAD--TAIL",
+        "HEAD---TAIL",
+        "HEAD----TAIL",
+    ]
+    no_match_payloads = [
+        "HEAD-TAIL",
+        "HEAD------TAIL",
+        "HEAD--------TAIL",
+        "TAIL--HEAD",
+    ]
+    match_results = [
+        evaluator.evaluate({**event_fields, "payload": payload})
+        for payload in match_payloads
+    ]
+    no_match_results = [
+        evaluator.evaluate({**event_fields, "payload": payload})
+        for payload in no_match_payloads
+    ]
+
+    assert all(len(result) == 1 for result in match_results)
+    assert all(result == [] for result in no_match_results)
+    assert match_results[0][0]["match_info"][1] == {
+        "content": "TAIL",
+        "field": "payload",
+        "nocase": False,
+        "offset": 6,
+        "depth": 6,
+        "distance": 2,
+        "within": 8,
+    }
+    distance_only_rule = {
+        "content_conditions": [
+            {"pattern": "HEAD", "nocase": False},
+            {"pattern": "TAIL", "nocase": False, "distance": 2},
+        ]
+    }
+    within_only_rule = {
+        "content_conditions": [
+            {"pattern": "HEAD", "nocase": False},
+            {"pattern": "TAIL", "nocase": False, "within": 8},
+        ]
+    }
+    independent_relative_results = {
+        "distance_match": matcher.matches(
+            distance_only_rule,
+            {"payload": "HEAD--TAIL"},
+        )["matched"],
+        "distance_no_match": matcher.matches(
+            distance_only_rule,
+            {"payload": "HEAD-TAIL"},
+        )["matched"],
+        "within_match": matcher.matches(
+            within_only_rule,
+            {"payload": "HEAD----TAIL"},
+        )["matched"],
+        "within_no_match": matcher.matches(
+            within_only_rule,
+            {"payload": "HEAD------TAIL"},
+        )["matched"],
+    }
+    assert independent_relative_results == {
+        "distance_match": True,
+        "distance_no_match": False,
+        "within_match": True,
+        "within_no_match": False,
+    }
+
+    invalid_rules = [
+        'alert tcp any any -> any any (content:"HEAD"; distance:1; sid:1;)',
+        'alert tcp any any -> any any (content:"HEAD"; content:"TAIL"; distance:-1; sid:2;)',
+        'alert tcp any any -> any any (content:"HEAD"; content:"TAIL"; within:0; sid:3;)',
+        'alert tcp any any -> any any (content:"HEAD"; content:"TAIL"; distance:"2"; sid:4;)',
+    ]
+    invalid_results = [parser.parse(rule) for rule in invalid_rules]
+    assert all(result["status"] == "invalid" for result in invalid_results)
+    assert matcher.matches(
+        {
+            "content_conditions": [
+                {
+                    "pattern": "HEAD",
+                    "nocase": False,
+                    "distance": 1,
+                    "within": None,
+                }
+            ]
+        },
+        {**event_fields, "payload": "HEAD"},
+    ) == {"matched": False, "match_info": []}
+
+    output_path.write_text(
+        json.dumps(
+            {
+                "match_payloads": [
+                    {"payload": payload, "detections": result}
+                    for payload, result in zip(match_payloads, match_results)
+                ],
+                "no_match_payloads": [
+                    {"payload": payload, "detections": result}
+                    for payload, result in zip(
+                        no_match_payloads,
+                        no_match_results,
+                    )
+                ],
+                "independent_relative_results": independent_relative_results,
+                "invalid_rule_statuses": [
+                    {
+                        "status": result["status"],
+                        "reason": result["reason"],
+                    }
+                    for result in invalid_results
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_syntax_invalid_rule_does_not_stop_loading():
     project_root = Path(__file__).resolve().parents[1]
     input_path = project_root / "TEST" / "BT3" / "T02" / "input.rules"
@@ -548,6 +715,8 @@ def test_content_matching_respects_nocase_and_reports_matched_field():
             "nocase": False,
             "offset": None,
             "depth": None,
+            "distance": None,
+            "within": None,
         }
     ]
     assert rules[1]["content_conditions"] == [
@@ -556,6 +725,8 @@ def test_content_matching_respects_nocase_and_reports_matched_field():
             "nocase": True,
             "offset": None,
             "depth": None,
+            "distance": None,
+            "within": None,
         }
     ]
 
@@ -632,6 +803,8 @@ def test_content_offset_depth_limits_matching_region():
             "nocase": False,
             "offset": 4,
             "depth": 6,
+            "distance": None,
+            "within": None,
         }
     ]
     assert rules[1]["content_conditions"] == [
@@ -640,6 +813,8 @@ def test_content_offset_depth_limits_matching_region():
             "nocase": False,
             "offset": None,
             "depth": 5,
+            "distance": None,
+            "within": None,
         }
     ]
 

@@ -1,0 +1,118 @@
+{
+  "match_payloads": [
+    {
+      "payload": "HEAD--TAIL",
+      "detections": [
+        {
+          "rule_text": "alert tcp any any -> any any (msg:\"Relative content bounds\"; content:\"HEAD\"; content:\"TAIL\"; distance:2; within:8; offset:6; depth:6; sid:1000031; rev:1;)",
+          "match_info": [
+            {
+              "content": "HEAD",
+              "field": "payload",
+              "nocase": false
+            },
+            {
+              "content": "TAIL",
+              "field": "payload",
+              "nocase": false,
+              "offset": 6,
+              "depth": 6,
+              "distance": 2,
+              "within": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "payload": "HEAD---TAIL",
+      "detections": [
+        {
+          "rule_text": "alert tcp any any -> any any (msg:\"Relative content bounds\"; content:\"HEAD\"; content:\"TAIL\"; distance:2; within:8; offset:6; depth:6; sid:1000031; rev:1;)",
+          "match_info": [
+            {
+              "content": "HEAD",
+              "field": "payload",
+              "nocase": false
+            },
+            {
+              "content": "TAIL",
+              "field": "payload",
+              "nocase": false,
+              "offset": 6,
+              "depth": 6,
+              "distance": 2,
+              "within": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "payload": "HEAD----TAIL",
+      "detections": [
+        {
+          "rule_text": "alert tcp any any -> any any (msg:\"Relative content bounds\"; content:\"HEAD\"; content:\"TAIL\"; distance:2; within:8; offset:6; depth:6; sid:1000031; rev:1;)",
+          "match_info": [
+            {
+              "content": "HEAD",
+              "field": "payload",
+              "nocase": false
+            },
+            {
+              "content": "TAIL",
+              "field": "payload",
+              "nocase": false,
+              "offset": 6,
+              "depth": 6,
+              "distance": 2,
+              "within": 8
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "no_match_payloads": [
+    {
+      "payload": "HEAD-TAIL",
+      "detections": []
+    },
+    {
+      "payload": "HEAD------TAIL",
+      "detections": []
+    },
+    {
+      "payload": "HEAD--------TAIL",
+      "detections": []
+    },
+    {
+      "payload": "TAIL--HEAD",
+      "detections": []
+    }
+  ],
+  "independent_relative_results": {
+    "distance_match": true,
+    "distance_no_match": false,
+    "within_match": true,
+    "within_no_match": false
+  },
+  "invalid_rule_statuses": [
+    {
+      "status": "invalid",
+      "reason": "distance option requires a preceding content option"
+    },
+    {
+      "status": "invalid",
+      "reason": "distance option requires a non-negative integer"
+    },
+    {
+      "status": "invalid",
+      "reason": "within option requires a positive integer"
+    },
+    {
+      "status": "invalid",
+      "reason": "distance option requires a non-negative integer"
+    }
+  ]
+}
