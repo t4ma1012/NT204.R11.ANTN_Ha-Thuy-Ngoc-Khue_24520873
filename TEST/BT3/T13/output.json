@@ -1,0 +1,28 @@
+{
+  "candidate_rule_count": 3,
+  "detection_count": 2,
+  "detections": [
+    {
+      "sid": 1000040,
+      "rule_text": "alert tcp any any -> any any (msg:\"Alpha content\"; content:\"ALPHA\"; sid:1000040; rev:1;)",
+      "match_info": [
+        {
+          "content": "ALPHA",
+          "field": "payload",
+          "nocase": false
+        }
+      ]
+    },
+    {
+      "sid": 1000041,
+      "rule_text": "alert tcp any any -> any any (msg:\"Beta content\"; content:\"BETA\"; sid:1000041; rev:1;)",
+      "match_info": [
+        {
+          "content": "BETA",
+          "field": "payload",
+          "nocase": false
+        }
+      ]
+    }
+  ]
+}

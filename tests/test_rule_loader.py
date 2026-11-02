@@ -337,6 +337,67 @@ def test_tcp_flags_and_dsize_match_events_safely():
     )
 
 
+def test_multiple_rules_matching_single_event():
+    project_root = Path(__file__).resolve().parents[1]
+    input_path = project_root / "TEST" / "BT3" / "T13" / "input.rules"
+    output_path = project_root / "TEST" / "BT3" / "T13" / "output.json"
+
+    rules = RuleLoader().load_file(input_path, RuleParser().parse)
+    assert len(rules) == 3
+    assert all(rule["status"] == "valid" for rule in rules)
+
+    repository = RuleRepository()
+    repository.add_rules(rules)
+    matcher = ContentMatcher()
+
+    def detection_event_generator(rule, event):
+        return {
+            "sid": int(rule["rule_text"].split("sid:")[1].split(";")[0]),
+            "rule_text": rule["rule_text"],
+        }
+
+    evaluator = RuleEvaluationEngine(
+        repository,
+        matcher.matches,
+        detection_event_generator,
+    )
+    event = {
+        "protocol": "TCP",
+        "src_ip": "10.0.0.1",
+        "src_port": 51000,
+        "dst_ip": "10.0.0.2",
+        "dst_port": 80,
+        "payload": "request contains ALPHA and BETA only",
+    }
+
+    detections = evaluator.evaluate(event)
+    assert len(detections) == 2
+    assert [detection["sid"] for detection in detections] == [
+        1000040,
+        1000041,
+    ]
+    assert [detection["match_info"][0]["content"] for detection in detections] == [
+        "ALPHA",
+        "BETA",
+    ]
+    assert all(
+        "GAMMA" not in detection["rule_text"]
+        for detection in detections
+    )
+
+    output_path.write_text(
+        json.dumps(
+            {
+                "candidate_rule_count": len(repository.get_candidates(event)),
+                "detection_count": len(detections),
+                "detections": detections,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_syntax_invalid_rule_does_not_stop_loading():
     project_root = Path(__file__).resolve().parents[1]
     input_path = project_root / "TEST" / "BT3" / "T02" / "input.rules"

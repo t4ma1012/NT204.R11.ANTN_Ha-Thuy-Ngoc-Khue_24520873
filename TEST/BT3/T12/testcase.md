@@ -23,3 +23,9 @@ python -m pytest -q tests\test_rule_loader.py -k test_tcp_flags_and_dsize
 ## Kết quả thực tế
 
 Đạt: rule `flags:S; dsize:>4` chỉ match TCP event có S và payload dài hơn 4 byte; exact size và hai đầu mút dsize range được kiểm tra riêng. Điều kiện flags fail closed với UDP hoặc thiếu field; dsize-only vẫn match TCP/UDP khi có `payload_length` hợp lệ.
+- T12:
+
+![image](https://hackmd.io/_uploads/S1FoB0BTfg.png)
+
+- Toàn bộ pytest: `42 passed`, 6 cảnh báo deprecation từ Scapy.
+![image](https://hackmd.io/_uploads/S1cnS0STfe.png)

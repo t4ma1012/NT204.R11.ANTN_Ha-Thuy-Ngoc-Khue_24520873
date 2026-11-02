@@ -1,0 +1,6 @@
+# Both matching rules should generate detections for one event.
+alert tcp any any -> any any (msg:"Alpha content"; content:"ALPHA"; sid:1000040; rev:1;)
+alert tcp any any -> any any (msg:"Beta content"; content:"BETA"; sid:1000041; rev:1;)
+
+# This rule is a non-matching control.
+alert tcp any any -> any any (msg:"Gamma content"; content:"GAMMA"; sid:1000042; rev:1;)
